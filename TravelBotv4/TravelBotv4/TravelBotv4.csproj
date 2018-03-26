@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\bot-message-routing\BotMessageRouting\BotMessageRouting.csproj" />
+    <ProjectReference Include="..\BotMessageRouting\BotMessageRouting.csproj" />
   </ItemGroup>
 
 </Project>
