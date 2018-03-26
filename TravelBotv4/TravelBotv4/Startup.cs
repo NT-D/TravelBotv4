@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Bot.Builder.Ai;
 using Microsoft.Bot.Builder.BotFramework;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
@@ -18,6 +13,7 @@ using Underscore.Bot.MessageRouting.DataStore.Azure;
 using Underscore.Bot.MessageRouting.DataStore.Local;
 using TravelBotv4.Settings;
 using TravelBotv4.MessageRouting;
+using TravelBotv4.CommandHandling;
 
 namespace TravelBotv4
 {
@@ -74,12 +70,14 @@ namespace TravelBotv4
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseBotFramework();
+            InitializeMessageRouting();
         }
 
-        public static void InitializeMessageRouting()
+        public void InitializeMessageRouting()
         {
             Settings = new BotSettings();
-            string connectionString = Settings[BotSettings.KeyRoutingDataStorageConnectionString];
+            string connectionString = Configuration.GetConnectionString("RoutingDataStorageConnectionString");
+            //string connectionString = Settings[BotSettings.KeyRoutingDataStorageConnectionString];
             IRoutingDataManager routingDataManager = null;
 
             if (string.IsNullOrEmpty(connectionString))
@@ -95,8 +93,8 @@ namespace TravelBotv4
 
             MessageRouterManager = new MessageRouterManager(routingDataManager);
             MessageRouterResultHandler = new MessageRouterResultHandler(MessageRouterManager);
-            //CommandMessageHandler = new CommandMessageHandler(MessageRouterManager, MessageRouterResultHandler);
-            //BackChannelMessageHandler = new BackChannelMessageHandler(MessageRouterManager.RoutingDataManager);
+            CommandMessageHandler = new CommandMessageHandler(MessageRouterManager, MessageRouterResultHandler);
+            BackChannelMessageHandler = new BackChannelMessageHandler(MessageRouterManager.RoutingDataManager);
         }
 
         public static BotSettings Settings
@@ -112,6 +110,18 @@ namespace TravelBotv4
         }
 
         public static MessageRouterResultHandler MessageRouterResultHandler
+        {
+            get;
+            private set;
+        }
+
+        public static CommandMessageHandler CommandMessageHandler
+        {
+            get;
+            private set;
+        }
+
+        public static BackChannelMessageHandler BackChannelMessageHandler
         {
             get;
             private set;
