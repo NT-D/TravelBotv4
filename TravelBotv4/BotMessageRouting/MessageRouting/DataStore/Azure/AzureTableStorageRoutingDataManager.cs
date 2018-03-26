@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Underscore.Bot.Models;
 using Underscore.Bot.Models.Azure;
 using Underscore.Bot.Utils;
@@ -19,11 +20,17 @@ namespace Underscore.Bot.MessageRouting.DataStore.Azure
     [Serializable]
     public class AzureTableStorageRoutingDataManager : AbstractRoutingDataManager
     {
-        protected const string TableNameParties = "Parties";
+        protected const string TableNameBotParties = "BotParties";
+        protected const string TableNameUserParties = "UserParties";
+        protected const string TableNameAggregationParties = "AggregationParties";
+        protected const string TableNamePendingRequests = "PendingRequests";
         protected const string TableNameConnections = "Connections";
         protected const string PartitionKey = "PartitionKey";
 
-        protected CloudTable _partiesTable;
+        protected CloudTable _botPartiesTable;
+        protected CloudTable _userPartiesTable;
+        protected CloudTable _aggregationPartiesTable;
+        protected CloudTable _pendingRequestsTable;
         protected CloudTable _connectionsTable;
 
         /// <summary>
@@ -40,218 +47,132 @@ namespace Underscore.Bot.MessageRouting.DataStore.Azure
                 throw new ArgumentNullException("The connection string cannot be null or empty");
             }
 
-            _partiesTable = AzureStorageHelper.GetTable(connectionString, TableNameParties);
+            _botPartiesTable = AzureStorageHelper.GetTable(connectionString, TableNameBotParties);
+            _userPartiesTable = AzureStorageHelper.GetTable(connectionString, TableNameUserParties);
+            _aggregationPartiesTable = AzureStorageHelper.GetTable(connectionString, TableNameAggregationParties);
+            _pendingRequestsTable = AzureStorageHelper.GetTable(connectionString, TableNamePendingRequests);
             _connectionsTable = AzureStorageHelper.GetTable(connectionString, TableNameConnections);
 
-            MakeSureTablesExist();
+            MakeSureTablesExistAsync();
         }
 
         public override IList<Party> GetUserParties()
         {
-            List<PartyEntity> partyEntities = null;
-
-            try
-            {
-                partyEntities =
-                    _partiesTable.ExecuteQuery(new TableQuery<PartyEntity>())
-                        .Where(x => x.PartyEntityType == PartyEntityType.User.ToString()).ToList();
-            }
-            catch (StorageException e)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to retrieve the user parties: {e.Message}");
-                return new List<Party>();
-            }
-
-            return ToPartyList(partyEntities).AsReadOnly();
+            return ToPartyList(GetPartyEntitiesAsync(PartyEntityType.User).Result);
         }
 
         public override IList<Party> GetBotParties()
         {
-            List<PartyEntity> partyEntities = null;
-
-            try
-            {
-                partyEntities =
-                    _partiesTable.ExecuteQuery(new TableQuery<PartyEntity>())
-                        .Where(x => x.PartyEntityType == PartyEntityType.Bot.ToString()).ToList();
-            }
-            catch (StorageException e)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to retrieve the bot parties: {e.Message}");
-                return new List<Party>();
-            }
-
-            return ToPartyList(partyEntities).AsReadOnly();
+            return ToPartyList(GetPartyEntitiesAsync(PartyEntityType.Bot).Result);
         }
 
         public override IList<Party> GetAggregationParties()
         {
-            List<PartyEntity> partyEntities = null;
-
-            try
-            {
-                partyEntities =
-                    _partiesTable.ExecuteQuery(new TableQuery<PartyEntity>())
-                        .Where(x => x.PartyEntityType == PartyEntityType.Aggregation.ToString()).ToList();
-            }
-            catch (StorageException e)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to retrieve the aggregation parties: {e.Message}");
-                return new List<Party>();
-            }
-
-            return ToPartyList(partyEntities).AsReadOnly();
+            return ToPartyList(GetPartyEntitiesAsync(PartyEntityType.Aggregation).Result);
         }
 
         public override IList<Party> GetPendingRequests()
         {
-            List<PartyEntity> partyEntities = null;
-
-            try
-            {
-                partyEntities =
-                    _partiesTable.ExecuteQuery(new TableQuery<PartyEntity>())
-                        .Where(x => x.PartyEntityType == PartyEntityType.PendingRequest.ToString()).ToList();
-            }
-            catch (StorageException e)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to retrieve the pending requests: {e.Message}");
-                return new List<Party>();
-            }
-
-            return ToPartyList(partyEntities).AsReadOnly();
+            return ToPartyList(GetPartyEntitiesAsync(PartyEntityType.PendingRequest).Result);
         }
 
         public override Dictionary<Party, Party> GetConnectedParties()
         {
-            Dictionary<Party, Party> connectedParties = new Dictionary<Party, Party>();
-            List<ConnectionEntity> connectionEntities = null;
-
-            try
-            { 
-                connectionEntities =
-                    _connectionsTable.ExecuteQuery(new TableQuery<ConnectionEntity>()).ToList();
-            }
-            catch (StorageException e)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to retrieve the connected parties: {e.Message}");
-                return connectedParties; // Return empty dictionary
-            }
-
-            foreach (var connectionEntity in connectionEntities)
-            {
-                connectedParties.Add(
-                    JsonConvert.DeserializeObject<PartyEntity>(connectionEntity.Owner).ToParty(),
-                    JsonConvert.DeserializeObject<PartyEntity>(connectionEntity.Client).ToParty());
-            }
-
-            return connectedParties;
+            return ToConnectedPartiesDictionary(GetConnectionEntitiesAsync().Result);
         }
 
-        public override void DeleteAll()
+        public override async void DeleteAll()
         {
             base.DeleteAll();
 
-            try
-            {
-                var partyEntities = _partiesTable.ExecuteQuery(new TableQuery<PartyEntity>());
+            CloudTable[] cloudTables =
+{
+                _botPartiesTable,
+                _userPartiesTable,
+                _aggregationPartiesTable,
+                _connectionsTable
+            };
 
-                foreach (var partyEntity in partyEntities)
+            foreach (CloudTable cloudTable in cloudTables)
+            {
+                try
                 {
-                    AzureStorageHelper.DeleteEntry<PartyEntity>(
-                        _partiesTable, partyEntity.PartitionKey, partyEntity.RowKey);
+                    var partyEntities = await GetPartyEntitiesAsync(cloudTable);
+
+                    foreach (var partyEntity in partyEntities)
+                    {
+                        await AzureStorageHelper.DeleteEntryAsync<PartyEntity>(
+                            cloudTable, partyEntity.PartitionKey, partyEntity.RowKey);
+                    }
+                }
+                catch (StorageException e)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to delete entries from table '{cloudTable.Name}': {e.Message}");
+                    return;
                 }
             }
-            catch (StorageException e)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to delete entries: {e.Message}");
-                return;
-            }
 
-            var connectionEntities = _connectionsTable.ExecuteQuery(new TableQuery<ConnectionEntity>());
+            var connectionEntities = await GetConnectionEntitiesAsync();
 
             foreach (var connectionEntity in connectionEntities)
             {
-                AzureStorageHelper.DeleteEntry<ConnectionEntity>(
+                await AzureStorageHelper.DeleteEntryAsync<ConnectionEntity>(
                     _connectionsTable, connectionEntity.PartitionKey, connectionEntity.RowKey);
             }
-
-            /*
-            try
-            {
-                _partiesTable.Delete();
-            }
-            catch (Exception e)
-            {
-                System.Diagnostics.Debug.WriteLine($"An error occured while trying to delete the parties table: {e.Message}");
-            }
-
-            try
-            {
-                _connectionsTable.Delete();
-            }
-            catch (Exception e)
-            {
-                System.Diagnostics.Debug.WriteLine($"An error occured while trying to delete the connections table: {e.Message}");
-            }
-            */
         }
 
         protected override bool ExecuteAddParty(Party partyToAdd, bool isUser)
         {
-            return AzureStorageHelper.Insert<PartyEntity>(
-                _partiesTable,
-                new PartyEntity(partyToAdd, isUser ? PartyEntityType.User : PartyEntityType.Bot));
+            return AzureStorageHelper.InsertAsync<PartyEntity>(
+                isUser ? _userPartiesTable : _botPartiesTable,
+                new PartyEntity(partyToAdd, isUser ? PartyEntityType.User : PartyEntityType.Bot)).Result;
         }
 
         protected override bool ExecuteRemoveParty(Party partyToRemove, bool isUser)
         {
-            return AzureStorageHelper.DeleteEntry<PartyEntity>(
-                _partiesTable,
+            return AzureStorageHelper.DeleteEntryAsync<PartyEntity>(
+                isUser ? _userPartiesTable : _botPartiesTable,
                 PartyEntity.CreatePartitionKey(partyToRemove, isUser ? PartyEntityType.User : PartyEntityType.Bot),
-                PartyEntity.CreateRowKey(partyToRemove));
+                PartyEntity.CreateRowKey(partyToRemove)).Result;
         }
 
         protected override bool ExecuteAddAggregationParty(Party aggregationPartyToAdd)
         {
-            return AzureStorageHelper.Insert<PartyEntity>(
-                _partiesTable, new PartyEntity(aggregationPartyToAdd, PartyEntityType.Aggregation));
+            return AzureStorageHelper.InsertAsync<PartyEntity>(
+                _aggregationPartiesTable, new PartyEntity(aggregationPartyToAdd, PartyEntityType.Aggregation)).Result;
         }
 
         protected override bool ExecuteRemoveAggregationParty(Party aggregationPartyToRemove)
         {
-            var partyEntitiesToRemove = GetPartyEntitiesByPropertyNameAndValue(
-                PartitionKey,
-                PartyEntity.CreatePartitionKey(aggregationPartyToRemove, PartyEntityType.Aggregation))
-                    .FirstOrDefault();
-
-            return AzureStorageHelper.DeleteEntry<PartyEntity>(
-                _partiesTable, partyEntitiesToRemove.PartitionKey, partyEntitiesToRemove.RowKey);
+            return AzureStorageHelper.DeleteEntryAsync<PartyEntity>(
+                _aggregationPartiesTable,
+                PartyEntity.CreatePartitionKey(aggregationPartyToRemove, PartyEntityType.Aggregation),
+                PartyEntity.CreateRowKey(aggregationPartyToRemove)).Result;
         }
 
         protected override bool ExecuteAddPendingRequest(Party requestorParty)
         {
-            return AzureStorageHelper.Insert<PartyEntity>(
-                _partiesTable, new PartyEntity(requestorParty, PartyEntityType.PendingRequest));
+            return AzureStorageHelper.InsertAsync<PartyEntity>(
+                _pendingRequestsTable, new PartyEntity(requestorParty, PartyEntityType.PendingRequest)).Result;
         }
 
         protected override bool ExecuteRemovePendingRequest(Party requestorParty)
         {
-            return AzureStorageHelper.DeleteEntry<PartyEntity>(
-                _partiesTable,
+            return AzureStorageHelper.DeleteEntryAsync<PartyEntity>(
+                _pendingRequestsTable,
                 PartyEntity.CreatePartitionKey(requestorParty, PartyEntityType.PendingRequest),
-                PartyEntity.CreateRowKey(requestorParty));
+                PartyEntity.CreateRowKey(requestorParty)).Result;
         }
 
         protected override bool ExecuteAddConnection(Party conversationOwnerParty, Party conversationClientParty)
         {
-            return AzureStorageHelper.Insert<ConnectionEntity>(_connectionsTable, new ConnectionEntity()
+            return AzureStorageHelper.InsertAsync<ConnectionEntity>(_connectionsTable, new ConnectionEntity()
             {
                 PartitionKey = conversationClientParty.ConversationAccount.Id,
                 RowKey = conversationOwnerParty.ConversationAccount.Id,
                 Client = JsonConvert.SerializeObject(new PartyEntity(conversationClientParty, PartyEntityType.Client)),
                 Owner = JsonConvert.SerializeObject(new PartyEntity(conversationOwnerParty, PartyEntityType.Owner))
-            });
+            }).Result;
         }
 
         protected override bool ExecuteRemoveConnection(Party conversationOwnerParty)
@@ -262,10 +183,10 @@ namespace Underscore.Bot.MessageRouting.DataStore.Azure
             {
                 Party conversationClientParty = GetConnectedCounterpart(conversationOwnerParty);
 
-                return AzureStorageHelper.DeleteEntry<ConnectionEntity>(
+                return AzureStorageHelper.DeleteEntryAsync<ConnectionEntity>(
                     _connectionsTable,
                     conversationClientParty.ConversationAccount.Id,
-                    conversationOwnerParty.ConversationAccount.Id);
+                    conversationOwnerParty.ConversationAccount.Id).Result;
             }
 
             return false;
@@ -274,31 +195,28 @@ namespace Underscore.Bot.MessageRouting.DataStore.Azure
         /// <summary>
         /// Makes sure the required tables exist.
         /// </summary>
-        protected virtual void MakeSureTablesExist()
+        protected virtual async void MakeSureTablesExistAsync()
         {
-            /*
-            _partiesTable.BeginCreateIfNotExists(OnPartiesTableCreateIfNotExistsFinished, null);
-            _connectionsTable.BeginCreateIfNotExists(OnConnectionsTableCreateIfNotExistsFinished, null);
-            */
+            CloudTable[] cloudTables =
+            {
+                _botPartiesTable,
+                _userPartiesTable,
+                _aggregationPartiesTable,
+                _pendingRequestsTable,
+                _connectionsTable
+            };
 
-            try
+            foreach (CloudTable cloudTable in cloudTables)
             {
-                _partiesTable.CreateIfNotExists();
-                System.Diagnostics.Debug.WriteLine("Parties table created or did already exist");
-            }
-            catch (StorageException e)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to create the parties table (perhaps it already exists): {e.Message}");
-            }
-
-            try
-            {
-                _connectionsTable.CreateIfNotExists();
-                System.Diagnostics.Debug.WriteLine("Connections table created or did already exist");
-            }
-            catch (StorageException e)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to create the connections table (perhaps it already exists): {e.Message}");
+                try
+                {
+                    await cloudTable.CreateIfNotExistsAsync();
+                    System.Diagnostics.Debug.WriteLine($"Table '{cloudTable.Name}' created or did already exist");
+                }
+                catch (StorageException e)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to create table '{cloudTable.Name}' (perhaps it already exists): {e.Message}");
+                }
             }
         }
 
@@ -323,18 +241,61 @@ namespace Underscore.Bot.MessageRouting.DataStore.Azure
         }
 
         /// <summary>
-        /// Resolves the parties in the party (cloud) table by the given property name and value.
+        /// Resolves the cloud table associated with the given party entity type.
         /// </summary>
-        /// <param name="propertyName">The property name for the filter.</param>
-        /// <param name="value">Party property values to match.</param>
-        /// <returns>The party entities in the table matching the given property name and value.</returns>
-        protected virtual IEnumerable<PartyEntity> GetPartyEntitiesByPropertyNameAndValue(string propertyName, string value)
+        /// <param name="partyEntityType">The party entity type.</param>
+        /// <returns>The cloud table associated with the party entity type.</returns>
+        protected virtual CloudTable CloudTableByPartyEntityType(PartyEntityType partyEntityType)
         {
-            TableQuery<PartyEntity> tableQuery =
-                new TableQuery<PartyEntity>()
-                    .Where(TableQuery.GenerateFilterCondition(propertyName, QueryComparisons.Equal, value));
+            switch (partyEntityType)
+            {
+                case PartyEntityType.Bot:
+                    return _botPartiesTable;
+                case PartyEntityType.User:
+                    return _userPartiesTable;
+                case PartyEntityType.Aggregation:
+                    return _aggregationPartiesTable;
+                case PartyEntityType.PendingRequest:
+                    return _pendingRequestsTable;
+                default:
+                    throw new ArgumentException($"No cloud table associated with party entity type {partyEntityType}");
+            }
+        }
 
-            return _partiesTable.ExecuteQuery(tableQuery);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cloudTable"></param>
+        /// <param name="tableQuery"></param>
+        /// <returns></returns>
+        protected virtual async Task<IEnumerable<PartyEntity>> GetPartyEntitiesAsync(
+            CloudTable cloudTable, TableQuery<PartyEntity> tableQuery = null)
+        {
+            tableQuery = tableQuery ?? new TableQuery<PartyEntity>();
+            return await AzureStorageHelper.ExecuteTableQueryAsync<PartyEntity>(cloudTable, tableQuery);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="partyEntityType"></param>
+        /// <returns></returns>
+        protected virtual async Task<IEnumerable<PartyEntity>> GetPartyEntitiesAsync(PartyEntityType partyEntityType)
+        {
+            TableQuery<PartyEntity> tableQuery = new TableQuery<PartyEntity>();
+            return await GetPartyEntitiesAsync(CloudTableByPartyEntityType(partyEntityType), tableQuery);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tableQuery"></param>
+        /// <returns></returns>
+        protected virtual async Task<IEnumerable<ConnectionEntity>> GetConnectionEntitiesAsync(TableQuery<ConnectionEntity> tableQuery = null)
+        {
+            Dictionary<Party, Party> connectedParties = new Dictionary<Party, Party>();
+            tableQuery = tableQuery ?? new TableQuery<ConnectionEntity>();
+            return await AzureStorageHelper.ExecuteTableQueryAsync(_connectionsTable, tableQuery);
         }
 
         /// <summary>
@@ -352,6 +313,25 @@ namespace Underscore.Bot.MessageRouting.DataStore.Azure
             }
 
             return partyList.ToList();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="connectionEntities"></param>
+        /// <returns></returns>
+        protected virtual Dictionary<Party, Party> ToConnectedPartiesDictionary(IEnumerable<ConnectionEntity> connectionEntities)
+        {
+            Dictionary<Party, Party> connectedParties = new Dictionary<Party, Party>();
+
+            foreach (var connectionEntity in connectionEntities)
+            {
+                connectedParties.Add(
+                    JsonConvert.DeserializeObject<PartyEntity>(connectionEntity.Owner).ToParty(),
+                    JsonConvert.DeserializeObject<PartyEntity>(connectionEntity.Client).ToParty());
+            }
+
+            return connectedParties;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Bot.Connector;
+using Microsoft.Bot.Schema;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -60,7 +61,7 @@ namespace Underscore.Bot.MessageRouting
         /// - MessageRouterResultType.Error in case of an error (see the error message).
         /// </returns>    
         public virtual async Task<MessageRouterResult> HandleActivityAsync(
-            Activity activity,
+            IMessageActivity activity,
             bool tryToRequestConnectionIfNotConnected,
             bool rejectConnectionRequestIfNoAggregationChannel,
             bool addClientNameToMessage = true,
@@ -220,7 +221,7 @@ namespace Underscore.Bot.MessageRouting
         /// <param name="rejectConnectionRequestIfNoAggregationChannel">If true, will reject all requests, if there is no aggregation channel.</param>
         /// <returns>Same as RequestConnection(Party, bool)</returns>
         public virtual MessageRouterResult RequestConnection(
-            Activity activity, bool rejectConnectionRequestIfNoAggregationChannel = false)
+            IActivity activity, bool rejectConnectionRequestIfNoAggregationChannel = false)
         {
             MessageRouterResult messageRouterResult =
                 RequestConnection(MessagingUtils.CreateSenderParty(activity), rejectConnectionRequestIfNoAggregationChannel);
@@ -389,7 +390,7 @@ namespace Underscore.Bot.MessageRouting
         /// - MessageRouterResultType.FailedToForwardMessage in case of an error (see the error message).
         /// </returns>
         public virtual async Task<MessageRouterResult> RouteMessageIfSenderIsConnectedAsync(
-            Activity activity, bool addClientNameToMessage = true, bool addOwnerNameToMessage = false)
+            IMessageActivity activity, bool addClientNameToMessage = true, bool addOwnerNameToMessage = false)
         {
             MessageRouterResult result = new MessageRouterResult()
             {

@@ -1,4 +1,4 @@
-﻿using Microsoft.Bot.Connector;
+﻿using Microsoft.Bot.Schema;
 using Underscore.Bot.Models;
 
 namespace Underscore.Bot.MessageRouting
@@ -37,7 +37,7 @@ namespace Underscore.Bot.MessageRouting
         /// <summary>
         /// Activity instance associated with the result.
         /// </summary>        
-        public Activity Activity
+        public IActivity Activity
         {
             get;
             set;
