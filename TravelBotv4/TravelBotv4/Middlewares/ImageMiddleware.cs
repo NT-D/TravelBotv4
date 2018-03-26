@@ -8,7 +8,7 @@ using Microsoft.Bot.Builder;
 
 namespace TravelBotv4.Middlewares
 {
-    public class CustomVisionMiddleware : IMiddleware
+    public class ImageMiddleware : IMiddleware
     {
         public async Task OnProcessRequest(IBotContext context, MiddlewareSet.NextDelegate next)
         {
