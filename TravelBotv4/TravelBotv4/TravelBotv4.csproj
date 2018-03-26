@@ -13,4 +13,8 @@
     <PackageReference Include="Microsoft.Bot.Builder.Prompts" Version="4.0.0-alpha2018031301" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\bot-message-routing\BotMessageRouting\BotMessageRouting.csproj" />
+  </ItemGroup>
+
 </Project>

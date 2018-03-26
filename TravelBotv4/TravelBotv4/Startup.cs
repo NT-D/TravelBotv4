@@ -12,6 +12,12 @@ using Microsoft.Bot.Builder.LUIS;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyMiddlewares = TravelBotv4.Middlewares;
+using Underscore.Bot.MessageRouting;
+using Underscore.Bot.MessageRouting.DataStore;
+using Underscore.Bot.MessageRouting.DataStore.Azure;
+using Underscore.Bot.MessageRouting.DataStore.Local;
+using TravelBotv4.Settings;
+using TravelBotv4.MessageRouting;
 
 namespace TravelBotv4
 {
@@ -68,6 +74,47 @@ namespace TravelBotv4
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseBotFramework();
+        }
+
+        public static void InitializeMessageRouting()
+        {
+            Settings = new BotSettings();
+            string connectionString = Settings[BotSettings.KeyRoutingDataStorageConnectionString];
+            IRoutingDataManager routingDataManager = null;
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                System.Diagnostics.Debug.WriteLine($"WARNING!!! No connection string found - using {nameof(LocalRoutingDataManager)}");
+                routingDataManager = new LocalRoutingDataManager();
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"Found a connection string - using {nameof(AzureTableStorageRoutingDataManager)}");
+                routingDataManager = new AzureTableStorageRoutingDataManager(connectionString);
+            }
+
+            MessageRouterManager = new MessageRouterManager(routingDataManager);
+            MessageRouterResultHandler = new MessageRouterResultHandler(MessageRouterManager);
+            //CommandMessageHandler = new CommandMessageHandler(MessageRouterManager, MessageRouterResultHandler);
+            //BackChannelMessageHandler = new BackChannelMessageHandler(MessageRouterManager.RoutingDataManager);
+        }
+
+        public static BotSettings Settings
+        {
+            get;
+            private set;
+        }
+
+        public static MessageRouterManager MessageRouterManager
+        {
+            get;
+            private set;
+        }
+
+        public static MessageRouterResultHandler MessageRouterResultHandler
+        {
+            get;
+            private set;
         }
     }
 }
