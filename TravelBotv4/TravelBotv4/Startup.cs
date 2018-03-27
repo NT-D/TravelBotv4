@@ -4,6 +4,7 @@ using Microsoft.Bot.Builder.Ai;
 using Microsoft.Bot.Builder.BotFramework;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Builder.LUIS;
+using Microsoft.Bot.Builder.Core.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyMiddlewares = TravelBotv4.Middlewares;
@@ -14,6 +15,7 @@ using Underscore.Bot.MessageRouting.DataStore.Local;
 using TravelBotv4.Settings;
 using TravelBotv4.MessageRouting;
 using TravelBotv4.CommandHandling;
+using TravelBotv4.Models;
 
 namespace TravelBotv4
 {
@@ -43,6 +45,7 @@ namespace TravelBotv4
 
                 options.Middleware.Add(new MyMiddlewares.ImageMiddleware(0.7f));
                 options.Middleware.Add(new MyMiddlewares.HumanHandoff());
+                options.Middleware.Add(new ConversationState<ConnectionState>(new MemoryStorage()));
 
                 var qnaOptions = new QnAMakerMiddlewareOptions()
                 {
