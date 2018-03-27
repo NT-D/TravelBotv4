@@ -41,7 +41,7 @@ namespace TravelBotv4
             {
                 options.CredentialProvider = new ConfigurationCredentialProvider(Configuration);
 
-                options.Middleware.Add(new MyMiddlewares.ImageMiddleware());
+                options.Middleware.Add(new MyMiddlewares.ImageMiddleware(0.7f));
                 options.Middleware.Add(new MyMiddlewares.HumanHandoff());
 
                 var qnaOptions = new QnAMakerMiddlewareOptions()
