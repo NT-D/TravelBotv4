@@ -2,9 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
-namespace TravelBotv4.Services.Model
+namespace TravelBotv4.Services.Models
 {
     [Serializable]
     public class PlansRequest : BaseSearchRequest

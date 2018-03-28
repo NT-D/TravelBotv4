@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using TravelBotv4.Services.Model;
+using TravelBotv4.Services.Models;
 
 namespace TravelBotv4.Services
 {

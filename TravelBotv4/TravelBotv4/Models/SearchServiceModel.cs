@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace TravelBotv4.Services.Model
+namespace TravelBotv4.Services.Models
 {
     public interface ISearchRequest
     {

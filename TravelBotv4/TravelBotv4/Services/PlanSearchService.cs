@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Net.Http;
-using TravelBotv4.Services.Model;
+using TravelBotv4.Services.Models;
 using Newtonsoft.Json;
 
 namespace TravelBotv4.Services
