@@ -58,8 +58,8 @@ namespace TravelBotv4.Topics
 
             var options = new QnAMakerOptions()
             {
-                KnowledgeBaseId = "c2c374b7-dbb6-42c9-8d9d-e3e8ac2277e6",
-                SubscriptionKey = "ffbf9ad17b7349229dbc70a0de8a9389",
+                KnowledgeBaseId = "",
+                SubscriptionKey = "",
                 ScoreThreshold = 0.7f
             };
 
