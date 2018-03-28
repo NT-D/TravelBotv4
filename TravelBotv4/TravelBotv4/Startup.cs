@@ -47,17 +47,17 @@ namespace TravelBotv4
                 options.Middleware.Add(new MyMiddlewares.HumanHandoff());
                 options.Middleware.Add(new ConversationState<ConnectionState>(new MemoryStorage()));
 
-                var qnaOptions = new QnAMakerMiddlewareOptions()
-                {
-                    KnowledgeBaseId = "<Your ID>",
-                    SubscriptionKey = "<Your Subscription Key>",
-                    ScoreThreshold = 0.5f,
-                    EndActivityRoutingOnAnswer = true
-                };
-                options.Middleware.Add(new MyMiddlewares.QnAMakerMiddleware(qnaOptions));
+                //var qnaOptions = new QnAMakerMiddlewareOptions()
+                //{
+                //    KnowledgeBaseId = "<Your ID>",
+                //    SubscriptionKey = "<Your Subscription Key>",
+                //    ScoreThreshold = 0.5f,
+                //    EndActivityRoutingOnAnswer = true
+                //};
+                //options.Middleware.Add(new MyMiddlewares.QnAMakerMiddleware(qnaOptions));
 
-                var luisModel = new LuisModel("<Your Model ID>", "<Your subscription Key>", new System.Uri("https://eastasia.api.cognitive.microsoft.com/luis/v2.0/apps/"));
-                options.Middleware.Add(new MyMiddlewares.LuisMiddleware(luisModel));
+                //var luisModel = new LuisModel("<Your Model ID>", "<Your subscription Key>", new System.Uri("https://eastasia.api.cognitive.microsoft.com/luis/v2.0/apps/"));
+                //options.Middleware.Add(new MyMiddlewares.LuisMiddleware(luisModel));
             });
         }
 
