@@ -30,13 +30,15 @@ namespace TravelBotv4.Middlewares
                 var conversationReference = GetConversationReference(context.Request);
                 var conversationInformation = new ConversationInformation()
                 {
+                    PartitionKey = "ConversationInformation",
+                    RowKey = conversationReference.User.Id,
                     conversationReference = conversationReference,
                     MessageFromUser = context.Request.Text
                 };
                 var storageConnectionString = Startup.Settings["KeyRoutingDataStorageConnectionString"];
                 CloudStorageAccount account = CloudStorageAccount.Parse(storageConnectionString);
                 CloudTableClient tableClient = account.CreateCloudTableClient();
-                CloudTable table = tableClient.GetTableReference("ConversationReference");
+                CloudTable table = tableClient.GetTableReference("ConversationInformation");
                 await table.CreateIfNotExistsAsync();
                 TableOperation insertOperation = TableOperation.Insert(conversationInformation);
 
