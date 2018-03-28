@@ -17,8 +17,7 @@ namespace TravelBotv4.Topics
 
     public class RootTopic : TopicsRoot<BotConversationState, RootTopicState>
     {
-        private const string SPOT_TOPIC = "searchSpotTopic";
-        private const string PLAN_TOPIC = "searchPlanTopic";
+        private const string SEARCH_TOPIC = "SearchTopic";
         private const string CHIT_CHAT_TOPIC = "chitChatTopic";
         private const string ChitChatKey = "chitChatKey";
         private QnAMaker qnAMaker;
@@ -56,6 +55,26 @@ namespace TravelBotv4.Topics
 
                 return chitChatTopic;
             });
+
+
+            // Searcher
+            this.SubTopics.Add(SEARCH_TOPIC, (object[] args) =>
+            {
+                var addAlarmTopic = new AddAlarmTopic();
+
+                addAlarmTopic.Set
+                    .OnSuccess((ctx, alarm) =>
+                    {
+                        this.ClearActiveTopic();
+                        context.SendActivity($"TopicのOnSuccess");
+                    })
+                    .OnFailure((ctx, reason) =>
+                    {
+                        this.ClearActiveTopic();
+                        context.SendActivity($"TopicのOnFailure"); ;
+                    });
+                return addAlarmTopic;
+            });
         }
 
 
@@ -69,10 +88,14 @@ namespace TravelBotv4.Topics
                 if (HasActiveTopic)
                 {
                     await ActiveTopic.OnReceiveActivity(context);
-                }
-
+                }                
                 await this.SetActiveTopic(CHIT_CHAT_TOPIC)
                     .OnReceiveActivity(context);
+
+                // Search
+                await this.SetActiveTopic(SEARCH_TOPIC)
+                    .OnReceiveActivity(context);
+
             }
         }
 

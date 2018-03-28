@@ -5,17 +5,15 @@ using PromptlyBot.Prompts;
 using PromptlyBot.Validator;
 using System.Threading.Tasks;
 
-namespace AlarmBot.Topics
+namespace TravelBotv4.Topics
 {
     public class AddAlarmTopicState : ConversationTopicState
     {
-        public Alarm Alarm = new Alarm();
     }
 
     public class AddAlarmTopic : ConversationTopic<AddAlarmTopicState, Alarm>
     {
         private const string TITLE_PROMPT = "titlePrompt";
-        private const string TIME_PROMPT = "timePrompt";
 
         public AddAlarmTopic() : base()
         {
@@ -26,73 +24,27 @@ namespace AlarmBot.Topics
                 titlePrompt.Set
                     .OnPrompt((context, lastTurnReason) =>
                     {
-                        if ((lastTurnReason != null) && (lastTurnReason == "titletoolong"))
-                        {
-                            context.SendActivity("Sorry, alarm titles must be less that 20 characters.",
-                                "Let's try again.");
-                        }
-
-                        context.SendActivity("What would you like to name your alarm?");
+                        context.SendActivity("Prompt");
                     })
-                    .Validator(new AlarmTitleValidator())
+                    .Validator(new DummyValidator())
                     .MaxTurns(2)
                     .OnSuccess((context, value) =>
                     {
                         this.ClearActiveTopic();
-
-                        this.State.Alarm.Title = value;
-
                         this.OnReceiveActivity(context);
+                        context.SendActivity("OnFailure");
+
                     })
                     .OnFailure((context, reason) =>
                     {
                         this.ClearActiveTopic();
-
-                        if ((reason != null) && (reason == "toomanyattempts"))
-                        {
-                            context.SendActivity("I'm sorry I'm having issues understanding you.");
-                        }
-
-                        this.OnFailure(context, reason);
+                        this.OnReceiveActivity(context);
+                        context.SendActivity("OnFailure");
                     });
 
                 return titlePrompt;
             });
-
-            this.SubTopics.Add(TIME_PROMPT, (object[] args) =>
-            {
-                var timePrompt = new Prompt<string>();
-
-                timePrompt.Set
-                    .OnPrompt((context, lastTurnReason) =>
-                    {
-                        context.SendActivity("What time would you like to set your alarm for?");
-                    })
-                    .Validator(new AlarmTimeValidator())
-                    .MaxTurns(2)
-                    .OnSuccess((context, value) =>
-                    {
-                        this.ClearActiveTopic();
-
-                        this.State.Alarm.Time = value;
-
-                        this.OnReceiveActivity(context);
-                    })
-                    .OnFailure((context, reason) =>
-                    {
-                        this.ClearActiveTopic();
-
-                        if ((reason != null) && (reason == "toomanyattempts"))
-                        {
-                            context.SendActivity("I'm sorry I'm having issues understanding you.");
-                        }
-
-                        this.OnFailure(context, reason);
-                    });
-
-                return timePrompt;
-            });
-
+            
         }
 
         public override Task OnReceiveActivity(IBotContext context)
@@ -103,22 +55,18 @@ namespace AlarmBot.Topics
                 return Task.CompletedTask;
             }
 
-            if (this.State.Alarm.Title == null)
+            // LUIS実行
+
+
+            // LUISの戻り値に応じて呼び出すAPIを変更する
+
+            if (true) //　planの場合
             {
                 this.SetActiveTopic(TITLE_PROMPT)
                     .OnReceiveActivity(context);
                 return Task.CompletedTask;
             }
-
-            if (this.State.Alarm.Time == null)
-            {
-                this.SetActiveTopic(TIME_PROMPT)
-                    .OnReceiveActivity(context);
-                return Task.CompletedTask;
-            }
-
-            this.OnSuccess(context, this.State.Alarm);
-
+            
             return Task.CompletedTask;
         }
     }
@@ -127,24 +75,14 @@ namespace AlarmBot.Topics
     {
         public override ValidatorResult<string> Validate(IBotContext context)
         {
-            if (context.Request.AsMessageActivity().Text.Length > 20)
+            return new ValidatorResult<string>
             {
-                return new ValidatorResult<string>
-                {
-                    Reason = "titletoolong"
-                };
-            }
-            else
-            {
-                return new ValidatorResult<string>
-                {
-                    Value = context.Request.AsMessageActivity().Text
-                };
-            }
+                Value = context.Request.AsMessageActivity().Text
+            };
         }
     }
 
-    public class AlarmTimeValidator : Validator<string>
+    public class DummyValidator : Validator<string>
     {
         public override ValidatorResult<string> Validate(IBotContext context)
         {
