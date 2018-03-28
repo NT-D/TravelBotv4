@@ -1,5 +1,6 @@
 ﻿using Microsoft.Bot;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Core.Extensions;
 using Microsoft.Bot.Builder.LUIS;
 using Microsoft.Bot.Schema;
 using PromptlyBot;
@@ -14,6 +15,10 @@ namespace TravelBotv4
     public class BotConversationState : PromptlyBotConversationState<RootTopicState>
     {
     }
+
+    public class BotUserState : StoreItem
+    {
+    }
     public class TravelBot : IBot
     {
         /*
@@ -26,7 +31,7 @@ namespace TravelBotv4
             }
         }
         */
-        
+
         public Task OnReceiveActivity(IBotContext context)
         {
             var rootTopic = new Topics.RootTopic(context);
@@ -35,7 +40,7 @@ namespace TravelBotv4
 
             return Task.CompletedTask;
         }
-        
+
 
 
     }
