@@ -62,13 +62,13 @@ namespace TravelBotv4.Middlewares
                         }
                         else
                         {
-                            await context.SendActivity("Middleware debug: Also used Bing Image Search");
-                            var bingImageResult = await BingImageRecognizer.DetectImage(stream, this.RecognizeThreshold);
-                            //TODO: Check result and make conditional jump. If the result is under threshold, pass the process to next middleware. Else we continue other services.
+                            //TODO: Will use bing image recognizer to detect image
+                            await next();
+                            //await context.SendActivity("Middleware debug: Also used Bing Image Search");
+                            //var bingImageResult = await BingImageRecognizer.DetectImage(stream, this.RecognizeThreshold);
                         }
                     }
                 }
-                await next();//Will change it. Because we will handle it after each detect.
             }
         }
 
