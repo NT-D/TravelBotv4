@@ -6,17 +6,19 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.6" />
+    <PackageReference Include="Microsoft.Azure.Storage.Common" Version="9.0.0.1-preview" />
     <PackageReference Include="Microsoft.Bot.Builder.Ai" Version="4.0.0-alpha2018031301" />
     <PackageReference Include="Microsoft.Bot.Builder.Core.Extensions" Version="4.0.0-alpha2018031301" />
     <PackageReference Include="Microsoft.Bot.Builder.Integration.AspNet.Core" Version="4.0.0-alpha2018031301" />
     <PackageReference Include="Microsoft.Bot.Builder.LUIS" Version="4.0.0-alpha2018031301" />
     <PackageReference Include="Microsoft.Bot.Builder.Prompts" Version="4.0.0-alpha2018031301" />
+    <PackageReference Include="Promptly-Bot" Version="0.0.6.12" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BotMessageRouting\BotMessageRouting.csproj" />
   </ItemGroup>
 
-  <ProjectExtensions><VisualStudio><UserProperties appsettings_1Development_1json__JSONSchema="" /></VisualStudio></ProjectExtensions>
+  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
 </Project>
