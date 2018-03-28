@@ -29,6 +29,7 @@ namespace Functions.Services
                 {
                     new Message()
                     {
+                        type = "text",
                         text = conversationInformation.MessageFromUser
                     }
                 },
