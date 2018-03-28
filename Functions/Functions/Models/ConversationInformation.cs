@@ -5,7 +5,7 @@ namespace Functions.Models
 {
     public class ConversationInformation : TableEntity
     {
-        public ConversationReference conversationReference { get; set; }
+        public ConversationReference ConversationReference { get; set; }
         public string MessageFromUser { get; set; }
     }
 }
