@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.Bot.Builder.Ai" Version="4.0.0-alpha2018031301" />
     <PackageReference Include="Microsoft.Bot.Builder.Core.Extensions" Version="4.0.0-alpha2018031301" />
     <PackageReference Include="Microsoft.Bot.Builder.Integration.AspNet.Core" Version="4.0.0-alpha2018031301" />
+    <PackageReference Include="Microsoft.Bot.Builder.Integration.AspNet.WebApi" Version="4.0.0-alpha2018031301" />
     <PackageReference Include="Microsoft.Bot.Builder.LUIS" Version="4.0.0-alpha2018031301" />
     <PackageReference Include="Microsoft.Bot.Builder.Prompts" Version="4.0.0-alpha2018031301" />
     <PackageReference Include="Microsoft.Cognitive.CustomVision.Prediction" Version="1.2.0" />
