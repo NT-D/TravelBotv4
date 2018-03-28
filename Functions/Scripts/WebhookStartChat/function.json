@@ -1,0 +1,29 @@
+{
+  "bindings": [
+    {
+      "authLevel": "function",
+      "name": "req",
+      "type": "httpTrigger",
+      "direction": "in",
+      "methods": [
+        "get",
+        "post"
+      ]
+    },
+    {
+      "type": "bot",
+      "name": "$return",
+      "botId": "WebhookStartChat",
+      "secret": "lZcQUOM9vHo.cwA.YAU.Y8Q4SJpXRC1XtmvWXxX0tOBL3ysQWr5ugWhwT_wk5B0",
+      "direction": "out"
+    },
+    {
+      "type": "table",
+      "name": "outputTable",
+      "tableName": "ChatPlusInformation",
+      "connection": "AzureWebJobsStorage",
+      "direction": "out"
+    }
+  ],
+  "disabled": false
+}

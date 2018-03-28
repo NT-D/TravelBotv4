@@ -1,0 +1,21 @@
+{
+  "bindings": [
+    {
+      "authLevel": "function",
+      "name": "req",
+      "type": "httpTrigger",
+      "direction": "in",
+      "methods": [
+        "get",
+        "post"
+      ]
+    },
+    {
+      "type": "bot",
+      "name": "$return",
+      "botId": "WebhookSendMessage",
+      "direction": "out"
+    }
+  ],
+  "disabled": false
+}
