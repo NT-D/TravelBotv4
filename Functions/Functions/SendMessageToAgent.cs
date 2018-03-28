@@ -20,6 +20,9 @@ namespace Functions
         {
             log.Info($"C# Queue trigger function processed: {myQueueItem}");
             var conversationInformation = JsonConvert.DeserializeObject<ConversationInformation>(myQueueItem);
+
+            // TODO hiroaki-honda Fix the way to select correct ChatPlusInformation. (Current way is just for Hackfest. The correct one is filtering by visitor_id)
+            // var chatPlusInformation = chatPlusInformationList.Where(c => c.visitor.visitor_id == conversationInformation.ConversationReference.User.Id).First();
             var chatPlusInformation = chatPlusInformationList.OrderByDescending(c => c.timestamp).First();
             await ChatPlus.SendMessage(chatPlusInformation, conversationInformation);
         }
