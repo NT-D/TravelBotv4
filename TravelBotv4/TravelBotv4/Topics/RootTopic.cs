@@ -15,8 +15,8 @@ namespace TravelBotv4.Topics
 
     public class RootTopic : TopicsRoot<BotConversationState, RootTopicState>
     {
-        private const string ADD_ALARM_TOPIC = "addAlarmTopic";
-        private const string DELETE_ALARM_TOPIC = "deleteAlarmTopic";
+        private const string SPOT_TOPIC = "searchSpotTopic";
+        private const string PLAN_TOPIC = "searchPlanTopic";
 
         public RootTopic(IBotContext context) : base(context)
         {
@@ -91,43 +91,11 @@ namespace TravelBotv4.Topics
         
         public override Task OnReceiveActivity(IBotContext context)
         {
-            context.SendActivity("Test.");
-            /*
+            context.SendActivity("Got it!");
+         
             if ((context.Request.Type == ActivityTypes.Message) && (context.Request.AsMessageActivity().Text.Length > 0))
             {
                 var message = context.Request.AsMessageActivity();
-
-                // If the user wants to change the topic of conversation...
-                if (message.Text.ToLowerInvariant() == "add alarm")
-                {
-                    // Set the active topic and let the active topic handle this turn.
-                    this.SetActiveTopic(ADD_ALARM_TOPIC)
-                            .OnReceiveActivity(context);
-                    return Task.CompletedTask;
-                }
-
-                if (message.Text.ToLowerInvariant() == "delete alarm")
-                {
-                    this.SetActiveTopic(DELETE_ALARM_TOPIC, context.GetUserState<BotUserState>().Alarms)
-                        .OnReceiveActivity(context);
-                    return Task.CompletedTask;
-                }
-
-                if (message.Text.ToLowerInvariant() == "show alarms")
-                {
-                    this.ClearActiveTopic();
-
-                    AlarmsView.ShowAlarms(context, context.GetUserState<BotUserState>().Alarms);
-                    return Task.CompletedTask;
-                }
-
-                if (message.Text.ToLowerInvariant() == "help")
-                {
-                    this.ClearActiveTopic();
-
-                    this.ShowHelp(context);
-                    return Task.CompletedTask;
-                }
 
                 // If there is an active topic, let it handle this turn until it completes.
                 if (HasActiveTopic)
@@ -136,30 +104,12 @@ namespace TravelBotv4.Topics
                     return Task.CompletedTask;
                 }
 
-                ShowDefaultMessage(context);
+                // 通常処理
             }
-            */
-            return Task.CompletedTask;
             
+            return Task.CompletedTask;   
         }
-
-        private void ShowDefaultMessage(IBotContext context)
-        {
-            context.SendActivity("'Show Alarms', 'Add Alarm', 'Delete Alarm', 'Help'.");
-        }
-
-        /*
-                private void ShowHelp(IBotContext context)
-                {
-                    var message = "Here's what I can do:\n\n";
-                    message += "To see your alarms, say 'Show Alarms'.\n\n";
-                    message += "To add an alarm, say 'Add Alarm'.\n\n";
-                    message += "To delete an alarm, say 'Delete Alarm'.\n\n";
-                    message += "To see this again, say 'Help'.";
-
-                    context.SendActivity(message);
-                }
-               */
+               
     }
 
 }
