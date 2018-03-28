@@ -40,33 +40,33 @@ namespace TravelBotv4.Middlewares
                 {
                     ImageRecognizeResult result = new ImageRecognizeResult();
 
-                    #region Check randmark with computer vision API
-                    await context.SendActivity("Used Computer Vision Service");
-                    ComputerVisionResult computerVisionResult = await ComputerVisionRecognizer.DetectImage(stream, this.RecognizeThreshold) as ComputerVisionResult;
+                    var computerVisionResult = await ComputerVisionRecognizer.DetectImage(stream, this.RecognizeThreshold) as ComputerVisionResult;
                     if (computerVisionResult.IsSure)
                     {
                         result.RecognizedServiceType = ImageServiceType.ComputerVisionService;
                         result.ComputerVisionResult = computerVisionResult;
                         context.Set(ImageRecognizerResultKey, result);
-                        await context.SendActivity($"This picture is {result.ComputerVisionResult.Result.Landmarks?[0].Name}");
+                        await context.SendActivity($"Computer Vision: This picture is {result.ComputerVisionResult.Result.Landmarks?[0].Name}");
                         await next();
                     }
                     else
                     {
-                        #region Check custom vision service
-                        await context.SendActivity("Also used Custom Vision Service");
-                        var customVisionResult = await CustomVisionRecognizer.DetectImage(stream, this.RecognizeThreshold);
-                        //TODO: Check result and make conditional jump. If the result is under threshold, pass the process to next middleware. Else we continue other services.
-                        #endregion
-
-                        #region  Check Bing Image Search
-                        await context.SendActivity("Also used Bing Image Search");
-                        var bingImageResult = await BingImageRecognizer.DetectImage(stream, this.RecognizeThreshold);
-                        //TODO: Check result and make conditional jump. If the result is under threshold, pass the process to next middleware. Else we continue other services.
-                        #endregion
+                        var customVisionResult = await CustomVisionRecognizer.DetectImage(stream, this.RecognizeThreshold) as CustomVisionResult;
+                        if (customVisionResult.IsSure)
+                        {
+                            result.RecognizedServiceType = ImageServiceType.CustomVisionService;
+                            result.CustomVisionResult = customVisionResult;
+                            context.Set(ImageRecognizerResultKey, result);
+                            await context.SendActivity($"Custom Vision: This picture is {result.CustomVisionResult.Predictions?[0].Tag}");
+                            await next();
+                        }
+                        else
+                        {
+                            await context.SendActivity("Middleware debug: Also used Bing Image Search");
+                            var bingImageResult = await BingImageRecognizer.DetectImage(stream, this.RecognizeThreshold);
+                            //TODO: Check result and make conditional jump. If the result is under threshold, pass the process to next middleware. Else we continue other services.
+                        }
                     }
-                    //TODO: Check result and make conditional jump. If the result is under threshold, pass the process to next middleware. Else we continue other services.
-                    #endregion
                 }
                 await next();//Will change it. Because we will handle it after each detect.
             }

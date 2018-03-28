@@ -16,13 +16,6 @@
     }
 
     //TODO: Separate file per class after research and define
-
-    public class CustomVisionResult
-    {
-        public bool IsSure { get; set; }
-        //reulst
-    }
-
     public class BingImageResult
     {
         public bool IsSure { get; set; }

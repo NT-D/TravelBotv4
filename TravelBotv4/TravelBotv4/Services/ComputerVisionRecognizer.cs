@@ -13,7 +13,7 @@ namespace TravelBotv4.Services
     public class ComputerVisionRecognizer : IImageRecognizer
     {
         const string uriBase = "https://eastasia.api.cognitive.microsoft.com/vision/v1.0/models/landmarks/analyze";
-        const string subscriptionKey = "<Your Computer Vision ID>";
+        const string subscriptionKey = "<Your subscription key>";
         public async Task<IImageRecognizedResult> DetectImage(Stream imageStream, float threshold)
         {
             using (var httpClient = new HttpClient())
@@ -27,7 +27,7 @@ namespace TravelBotv4.Services
                 {
                     string jsonResult = await response.Content.ReadAsStringAsync();
                     var result = JsonConvert.DeserializeObject<ComputerVisionResult>(jsonResult);
-                    if (result.Result.Landmarks?[0].Confidence > threshold) result.IsSure = true;
+                    if (result.Result.Landmarks.Any() && result.Result.Landmarks[0].Confidence > threshold) result.IsSure = true;
                     return result;
                 }
                 else
