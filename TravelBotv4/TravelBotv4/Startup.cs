@@ -46,6 +46,9 @@ namespace TravelBotv4
                 options.Middleware.Add(new MyMiddlewares.ImageMiddleware(0.7f));
                 options.Middleware.Add(new MyMiddlewares.HumanHandoff());
                 options.Middleware.Add(new ConversationState<ConnectionState>(new MemoryStorage()));
+                options.Middleware.Add(new ConversationState<BotConversationState>(new MemoryStorage()));
+                options.Middleware.Add(new UserState<BotUserState>(new MemoryStorage()));
+                options.EnableProactiveMessages = true;
 
                 //var qnaOptions = new QnAMakerMiddlewareOptions()
                 //{
