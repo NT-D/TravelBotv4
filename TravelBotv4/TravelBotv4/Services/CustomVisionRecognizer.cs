@@ -7,7 +7,7 @@ namespace TravelBotv4.Services
 {
     public class CustomVisionRecognizer : IImageRecognizer
     {
-        public Task<ImageRecognizeResult> DetectImage(Stream imageStream)
+        public Task<IImageRecognizedResult> DetectImage(Stream imageStream, float threshold)
         {
             throw new NotImplementedException();
         }
