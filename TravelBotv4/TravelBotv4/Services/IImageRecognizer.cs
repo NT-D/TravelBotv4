@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Threading.Tasks;
 using TravelBotv4.Models;
 
@@ -9,6 +6,6 @@ namespace TravelBotv4.Services
 {
     public interface IImageRecognizer
     {
-        Task<ImageRecognizeResult> DetectImage(Stream imageStream);
+        Task<IImageRecognizedResult> DetectImage(Stream imageStream, float recognizeThreshold);
     }
 }

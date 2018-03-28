@@ -9,7 +9,7 @@ namespace TravelBotv4.Services
 {
     public class BingImageRecognizer : IImageRecognizer
     {
-        public Task<ImageRecognizeResult> DetectImage(Stream imageStream)
+        public Task<IImageRecognizedResult> DetectImage(Stream imageStream, float threshold)
         {
             throw new NotImplementedException();
         }
