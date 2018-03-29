@@ -45,9 +45,9 @@ namespace TravelBotv4
                 await botContext.SendActivity("Start LUIS");
 
                 // finder
-                var luisModel = new LuisModel("178e1700-34e6-401b-8d60-f831b0b449ad", "50110d00f75b486480efa8fd8b537552", new System.Uri("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/178e1700-34e6-401b-8d60-f831b0b449ad?subscription-key=50110d00f75b486480efa8fd8b537552&verbose=true&timezoneOffset=0&q="));
+                var luisModel = new LuisModel("", "", new System.Uri("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/178e1700-34e6-401b-8d60-f831b0b449ad?subscription-key=50110d00f75b486480efa8fd8b537552&verbose=true&timezoneOffset=0&q="));
                 // feedback
-                //var luisModel = new LuisModel("3a3abee2-3567-4f85-9fc6-2d17a3189a08", "50110d00f75b486480efa8fd8b537552", new System.Uri("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/3a3abee2-3567-4f85-9fc6-2d17a3189a08?subscription-key=50110d00f75b486480efa8fd8b537552&verbose=true&timezoneOffset=0&q="));
+                //var luisModel = new LuisModel("", "", new System.Uri("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/3a3abee2-3567-4f85-9fc6-2d17a3189a08?subscription-key=50110d00f75b486480efa8fd8b537552&verbose=true&timezoneOffset=0&q="));
 
                 var luisRecognizer = new LuisRecognizer(luisModel);
                 var luisResult = await luisRecognizer.Recognize(utterance, CancellationToken.None);
