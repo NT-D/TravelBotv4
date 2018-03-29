@@ -88,17 +88,28 @@ namespace TravelBotv4.Topics
                 if (HasActiveTopic)
                 {
                     await ActiveTopic.OnReceiveActivity(context);
-                }                
+                }
+                // Feedbackに該当しない場合は、自動的に下記処理に流れる
+
+
+                // APIの結果に応じて分岐する
+
+                // CHITかどうかの判定
+                // if() {
                 await this.SetActiveTopic(CHIT_CHAT_TOPIC)
                     .OnReceiveActivity(context);
+                // }
+
+                // QnA
 
                 // Search
+                // if() {
                 await this.SetActiveTopic(SEARCH_TOPIC)
                     .OnReceiveActivity(context);
+                //}
+                // Feedbackは、SearchのSubtopicのためここには不要
 
             }
         }
-
     }
-
 }
