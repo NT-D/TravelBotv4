@@ -81,7 +81,6 @@ namespace TravelBotv4.Middlewares
                 // Set connecting state true
                 var state = context.GetUserState<BotUserState>();
                 state.IsConnectedToAgent = true;
-                await next();
             }
             else
             {
