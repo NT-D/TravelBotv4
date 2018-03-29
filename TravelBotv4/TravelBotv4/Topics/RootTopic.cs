@@ -97,17 +97,21 @@ namespace TravelBotv4.Topics
                 // CHITかどうかの判定
                 // if() {
                 await this.SetActiveTopic(CHIT_CHAT_TOPIC)
-                    .OnReceiveActivity(context);
+                .OnReceiveActivity(context);
                 // }
 
                 // QnA
+                // if() {
+                //await this.SetActiveTopic()
+                //.OnReceiveActivity(context);
+                // }
 
-                // Search
+                // Searchf
                 // if() {
                 await this.SetActiveTopic(SEARCH_TOPIC)
                     .OnReceiveActivity(context);
                 //}
-                // Feedbackは、SearchのSubtopicのためここには不要
+                // Feedbackは、SearchのSubPromptのためここには不要
 
             }
         }
