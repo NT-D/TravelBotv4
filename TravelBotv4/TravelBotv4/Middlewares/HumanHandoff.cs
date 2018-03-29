@@ -50,7 +50,7 @@ namespace TravelBotv4.Middlewares
                         throw new Exception("unexpected event type message");
                 }
             }
-            
+
             // Enqueue the message to hook the function which passes the message to agent if "IsConnectedToAgent" is true.
             var userState = context.GetUserState<BotUserState>();
             if (userState != null && userState.IsConnectedToAgent)

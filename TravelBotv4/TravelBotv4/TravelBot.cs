@@ -20,7 +20,7 @@ namespace TravelBotv4
 
     public class BotUserState : StoreItem
     {
-        public bool IsConnectedToAgent { get; set; } = false;
+        public bool IsConnectedToAgent { get; set; }
     }
     public class TravelBot : IBot
     {
