@@ -6,7 +6,8 @@ using PromptlyBot;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using TravelBotv4.Services;
+using TravelBotv4.Services.Models;
 
 namespace TravelBotv4.Topics
 {
@@ -19,6 +20,8 @@ namespace TravelBotv4.Topics
     {
         private const string SELECT_QUESTION_TOPIC = "SelectQuestionTopic";
         private QnAMaker qnAMaker;
+        private static bool SearcherFeedbackStaet = false;
+
 
         public RootTopic(IBotContext context) : base(context)
         {
@@ -57,6 +60,9 @@ namespace TravelBotv4.Topics
                     await ActiveTopic.OnReceiveActivity(context);
                     return;
                 }
+                if (!SearcherFeedbackStaet) {
+                    await context.SendActivity("Got it!");
+                }
 
                 // CHIT
                 // if() {
@@ -66,15 +72,40 @@ namespace TravelBotv4.Topics
                 // if() {
                 // }
 
-                // Searchf
-                // if() {
-                //}
-
                 // Feedback
-                // if() {
-                //}
+                if (SearcherFeedbackStaet)
+                {
+                    SearcherFeedbackStaet = false;
 
+                    await context.SendActivity("Thank you for your feedback!");
+                    return;
+                }
+
+                // Search
+                var finder = new Finder();
+                var result = await finder.SearchAsync(message.Text);
+                if (result != null) {
+                    SearcherFeedbackStaet = true;
+                    var activity = createReply(context, result);
+                    await context.SendActivity(activity);
+                    await context.SendActivity("Did you find what you ware looking for?");
+                    return;
+                }
+                await context.SendActivity("Sorry, but I didn't understand that. Could you try saying that another way?");
             }
+        }
+        private Activity createReply(IBotContext context, BaseSearchResult result)
+        {
+            var reply = context.Request.CreateReply();
+            if (result.GetType() == typeof(SpotsResult))
+            {
+                reply.Attachments = result.Attachments;
+            }
+            else if (result.GetType() == typeof(PlansResult))
+            {
+                // TODO: 
+            }
+            return reply;
         }
     }
 }
