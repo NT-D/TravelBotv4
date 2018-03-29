@@ -18,12 +18,17 @@ namespace TravelBotv4.Services
         private static string StreamUrl = "";
         
 
+
+
         private enum INTENT : UInt16 {
             NONE = 0,
             PLACES__FIND_PLACE,
+            UTILITIES__SHOW_PREVIOUS,
+            UTILITIES__SHOW_NEXT,
             COUNT
         };
- 
+
+        private static SpotsRequest previous_request = null;
 
         public async Task<BaseSearchResult> SearchAsync(string utterance)
         {
@@ -41,8 +46,41 @@ namespace TravelBotv4.Services
                 SpotsResult result = null;
                 switch (intent) {
                     case INTENT.PLACES__FIND_PLACE:
-                        result = await searchSpotAsync(entity);
+                        var request = createSpotRequest(entity);
+                        previous_request = request;
+                        result = await searchSpotAsync(request);
                         break;
+
+                    case INTENT.UTILITIES__SHOW_PREVIOUS:
+                        if (previous_request == null)
+                        {
+                            var new_request = createSpotRequest(entity);
+                            previous_request = new_request;
+                            result = await searchSpotAsync(new_request);
+                        }
+                        else
+                        {
+                            if (0 < previous_request.offset) { 
+                                previous_request.offset -= 1;
+                            }
+                            result = await searchSpotAsync(previous_request);
+                        }
+                        break;
+
+                    case INTENT.UTILITIES__SHOW_NEXT:
+                        if (previous_request == null)
+                        {
+                            var new_request = createSpotRequest(entity);
+                            previous_request = new_request;
+                            result = await searchSpotAsync(new_request);
+                        }
+                        else
+                        {
+                            previous_request.offset += 1;
+                            result = await searchSpotAsync(previous_request);
+                        }
+                        break;
+
                     default:
                         // nothing
                         break;
@@ -67,6 +105,14 @@ namespace TravelBotv4.Services
             if (luisResult.Intents.GetValue("Places.FindPlace") != null) {
                 return INTENT.PLACES__FIND_PLACE;
             }
+            if (luisResult.Intents.GetValue("Utilities.ShowPrevious") != null)
+            {
+                return INTENT.UTILITIES__SHOW_PREVIOUS;
+            }
+            if (luisResult.Intents.GetValue("Utilities.ShowNext") != null)
+            {
+                return INTENT.UTILITIES__SHOW_NEXT;
+            }
 
             return INTENT.NONE;
         }
@@ -79,13 +125,16 @@ namespace TravelBotv4.Services
             }
             return null;
         }
-
-        private async Task<SpotsResult> searchSpotAsync(string entity)
+        private SpotsRequest createSpotRequest(string entity)
+        {
+            var request = new SpotsRequest();
+            request.keyword = entity;
+            return request;
+        }
+        private async Task<SpotsResult> searchSpotAsync(SpotsRequest request)
         {
             var service = new Services.SpotSearchService();
-            var req = new SpotsRequest();
-            req.keyword = entity;
-            return await service.Search(req) as SpotsResult;
+            return await service.Search(request) as SpotsResult;
         }
     }
 }

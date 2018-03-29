@@ -12,7 +12,7 @@ namespace TravelBotv4.Services
 {
     public class Feedbacker
     {
-        
+                
         private static string ModelId = "";
         private static string SubscriptionKey = "";
         private static string StreamUrl = "";
