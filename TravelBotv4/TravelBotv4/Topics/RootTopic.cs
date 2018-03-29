@@ -76,9 +76,17 @@ namespace TravelBotv4.Topics
                 if (SearcherFeedbackStaet)
                 {
                     SearcherFeedbackStaet = false;
-
-                    await context.SendActivity("Thank you for your feedback!");
-                    return;
+                    var feedbacker = new Feedbacker();
+                    var feedback = await feedbacker.SearchAsync(message.Text);
+                    if (feedback == Feedbacker.INTENT.FEEDBACK_NEGATIVE) {
+                        await context.SendActivity("Sorry, but could you try agein using another term?");
+                        return;
+                    } else if (feedback == Feedbacker.INTENT.FEEDBACK_POSITIVE)
+                    {
+                        await context.SendActivity("No problem!");
+                        return;
+                    }
+                    // Not reterun and continue next line when you get NOEN intent.
                 }
 
                 // Search

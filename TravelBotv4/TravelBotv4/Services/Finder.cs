@@ -12,13 +12,16 @@ namespace TravelBotv4.Services
 {
     public class Finder 
     {
+        
         private static string ModelId = "";
         private static string SubscriptionKey = "";
         private static string StreamUrl = "";
+        
 
         private enum INTENT : UInt16 {
-            PLACES__FIND_PLACE = 1,
-            NONE
+            NONE = 0,
+            PLACES__FIND_PLACE,
+            COUNT
         };
  
 
