@@ -36,39 +36,36 @@ namespace TravelBotv4.Middlewares
             }
             else
             {
-                using (var stream = await GetImageStream(imageAttachment))
-                {
-                    ImageRecognizeResult result = new ImageRecognizeResult();
+               ImageRecognizeResult result = new ImageRecognizeResult();
 
-                    var computerVisionResult = await ComputerVisionRecognizer.DetectImage(stream, this.RecognizeThreshold) as ComputerVisionResult;
-                    if (computerVisionResult.IsSure)
+               var computerVisionResult = await ComputerVisionRecognizer.DetectImage(await GetImageStream(imageAttachment), this.RecognizeThreshold) as ComputerVisionResult;
+               if (computerVisionResult.IsSure)
+               {
+                    result.RecognizedServiceType = ImageServiceType.ComputerVisionService;
+                    result.ComputerVisionResult = computerVisionResult;
+                    context.Set(ImageRecognizerResultKey, result);
+                    await context.SendActivity($"Computer Vision: This picture is {result.ComputerVisionResult.Result.Landmarks?[0].Name}");
+                    await next();
+               }
+               else
+               {
+                    var customVisionResult = await CustomVisionRecognizer.DetectImage(await GetImageStream(imageAttachment), this.RecognizeThreshold) as CustomVisionResult;
+                    if (customVisionResult.IsSure)
                     {
-                        result.RecognizedServiceType = ImageServiceType.ComputerVisionService;
-                        result.ComputerVisionResult = computerVisionResult;
+                        result.RecognizedServiceType = ImageServiceType.CustomVisionService;
+                        result.CustomVisionResult = customVisionResult;
                         context.Set(ImageRecognizerResultKey, result);
-                        await context.SendActivity($"Computer Vision: This picture is {result.ComputerVisionResult.Result.Landmarks?[0].Name}");
+                        await context.SendActivity($"Custom Vision: This picture is {result.CustomVisionResult.PredictionResultModel.Predictions?[0].Tag}");
                         await next();
                     }
                     else
                     {
-                        var customVisionResult = await CustomVisionRecognizer.DetectImage(stream, this.RecognizeThreshold) as CustomVisionResult;
-                        if (customVisionResult.IsSure)
-                        {
-                            result.RecognizedServiceType = ImageServiceType.CustomVisionService;
-                            result.CustomVisionResult = customVisionResult;
-                            context.Set(ImageRecognizerResultKey, result);
-                            await context.SendActivity($"Custom Vision: This picture is {result.CustomVisionResult.Predictions?[0].Tag}");
-                            await next();
-                        }
-                        else
-                        {
-                            //TODO: Will use bing image recognizer to detect image
-                            await next();
-                            //await context.SendActivity("Middleware debug: Also used Bing Image Search");
-                            //var bingImageResult = await BingImageRecognizer.DetectImage(stream, this.RecognizeThreshold);
-                        }
+                        //TODO: Will use bing image recognizer to detect image
+                        await next();
+                        //await context.SendActivity("Middleware debug: Also used Bing Image Search");
+                        //var bingImageResult = await BingImageRecognizer.DetectImage(stream, this.RecognizeThreshold);
                     }
-                }
+               }
             }
         }
 

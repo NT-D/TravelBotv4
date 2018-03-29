@@ -13,7 +13,7 @@ namespace TravelBotv4.Services
 {
     public class CustomVisionRecognizer : IImageRecognizer
     {
-        const string projectId = "<Your project id>";
+        const string projectId = "<Your projectId>";
         //const string uriBase = "<Your uri base>";
         const string key = "<Your key>";
         public async Task<IImageRecognizedResult> DetectImage(Stream imageStream, float threshold)
@@ -22,8 +22,12 @@ namespace TravelBotv4.Services
             {
                 try
                 {
-                    var result = await predictEndpoint.PredictImageAsync(new Guid(projectId), imageStream) as CustomVisionResult;
-                    var predictedObject = result.Predictions.FirstOrDefault(obj => obj.Probability > threshold);
+                    var result = new CustomVisionResult
+                    {
+                        PredictionResultModel = await predictEndpoint.PredictImageAsync(new Guid(projectId), imageStream)
+                    };
+
+                    var predictedObject = result.PredictionResultModel.Predictions.FirstOrDefault(obj => obj.Probability > threshold);
                     if (predictedObject != null) result.IsSure = true;
                     return result;
                 }
