@@ -32,8 +32,9 @@ namespace TravelBotv4.Middlewares
             // Handle the message from functions contains ChatPlus's webhook response
             if (activity.Type == ActivityTypes.Event)
             {
-                string userId = Deserialize<Visitor>("visitor", (Activity)activity).visitor_id;
-                ConversationReference conversationReference = GetConversationReferenceByUserId(userId);
+                string userId = "default-user"; // TODO hiroaki-honda remove this line and replace userId used as key to extract ConversationInformation from table storage. ("default-user" is the userId just for Hackfest).
+                // string userId = Deserialize<Visitor>("visitor", (Activity)activity).visitor_id;
+                ConversationReference conversationReference = await GetConversationReferenceByUserId(userId);
 
                 switch (activity.From.Id)
                 {
@@ -83,6 +84,7 @@ namespace TravelBotv4.Middlewares
                 CloudTable table = tableClient.GetTableReference("ConversationInformation");
                 await table.CreateIfNotExistsAsync();
                 TableOperation insertOperation = TableOperation.Insert(conversationInformation);
+                await table.ExecuteAsync(insertOperation);
 
                 // TODO hiroaki-honda Implement the logic to hook the function which request connection to ChatPlus
                 // Status: Ask chatplus to prepare the API which receive the request to connect to agent
@@ -125,10 +127,15 @@ namespace TravelBotv4.Middlewares
             return JsonConvert.DeserializeObject<T>(((JObject)activity.Value).GetValue(name).ToString());
         }
 
-        private ConversationReference GetConversationReferenceByUserId(string userId)
+        private async Task<ConversationReference> GetConversationReferenceByUserId(string userId)
         {
-            // TODO hiroaki-honda Implement the logic to get ConversationReferenc from table storage using userId as key
-            return null;
+            CloudStorageAccount account = buildStorageAccount();
+            CloudTableClient tableClient = account.CreateCloudTableClient();
+            CloudTable table = tableClient.GetTableReference("ConversationInformation");
+            TableOperation getConversationInformation = TableOperation.Retrieve("ConversationInformation", userId);
+            var res = await table.ExecuteAsync(getConversationInformation);
+            var conversationInformation = (ConversationInformation)res.Result;
+            return conversationInformation.conversationReference;
         }
 
         private CloudStorageAccount buildStorageAccount()
