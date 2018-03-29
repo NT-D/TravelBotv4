@@ -19,6 +19,7 @@ namespace TravelBotv4.Models
         public Room room { get; set; }
         public Agent agent { get; set; }
         public Visitor visitor { get; set; }
+        public Message message { get; set; }
     }
 
     public class Site
@@ -59,5 +60,12 @@ namespace TravelBotv4.Models
         public string visit_count { get; set; }
         public Page page { get; set; }
         public string useragent { get; set; }
+    }
+
+    public class Message
+    {
+        public string id { get; set; }
+        public string type { get; set; }
+        public string text { get; set; }
     }
 }

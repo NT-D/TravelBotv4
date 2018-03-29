@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Configuration;
 using System.Linq;
+using Microsoft.Extensions.Configuration;
+using TravelBotv4;
 
 namespace TravelBotv4.Settings
 {
@@ -32,12 +34,6 @@ namespace TravelBotv4.Settings
                 }
 
                 string settingValue = null;
-                /*
-                if (ConfigurationManager.AppSettings.AllKeys.Contains(key))
-                {
-                    settingValue = ConfigurationManager.AppSettings[key];
-                }
-                */
 
                 if (string.IsNullOrEmpty(settingValue))
                 {
@@ -82,6 +78,11 @@ namespace TravelBotv4.Settings
 
                 return null;
             }
+        }
+
+        public string ConnectionString
+        {
+            get; set;
         }
     }
 }
