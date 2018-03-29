@@ -52,8 +52,8 @@ namespace TravelBotv4.Middlewares
             }
             
             // Enqueue the message to hook the function which passes the message to agent if "IsConnectedToAgent" is true.
-            var connectionState = context.GetUserState<ConnectionState>();
-            if (connectionState != null && connectionState.IsConnectedToAgent)
+            var userState = context.GetUserState<BotUserState>();
+            if (userState != null && userState.IsConnectedToAgent)
             {
                 CloudStorageAccount account = buildStorageAccount();
                 CloudQueueClient cloudQueueClient = account.CreateCloudQueueClient();
@@ -79,8 +79,9 @@ namespace TravelBotv4.Middlewares
                 // Status: Ask chatplus to prepare the API which receive the request to connect to agent
 
                 // Set connecting state true
-                var state = context.GetUserState<ConnectionState>();
+                var state = context.GetUserState<BotUserState>();
                 state.IsConnectedToAgent = true;
+                await next();
             }
             else
             {
@@ -102,8 +103,8 @@ namespace TravelBotv4.Middlewares
             CloudTableClient tableClient = account.CreateCloudTableClient();
             CloudTable table = tableClient.GetTableReference("ConversationInformation");
             await table.CreateIfNotExistsAsync();
-            TableOperation insertOperation = TableOperation.Insert(conversationInformation);
-            await table.ExecuteAsync(insertOperation);
+            TableOperation upsertOperation = TableOperation.InsertOrReplace(conversationInformation);
+            await table.ExecuteAsync(upsertOperation);
         }
 
         public static ConversationReference GetConversationReference(Activity activity)
