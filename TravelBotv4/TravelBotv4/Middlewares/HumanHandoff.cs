@@ -72,26 +72,13 @@ namespace TravelBotv4.Middlewares
             if (!string.IsNullOrEmpty(activity.Text)
                 && activity.Text.ToLower().Contains(Commands.CommandRequestConnection))
             {
-                // Store conversation reference
-                var conversationReference = GetConversationReference(context.Request);
-                var conversationInformation = new ConversationInformation()
-                {
-                    PartitionKey = "ConversationInformation",
-                    RowKey = conversationReference.User.Id,
-                    conversationReference = conversationReference,
-                    MessageFromUser = context.Request.Text
-                };
-                CloudStorageAccount account = buildStorageAccount();
-                CloudTableClient tableClient = account.CreateCloudTableClient();
-                CloudTable table = tableClient.GetTableReference("ConversationInformation");
-                await table.CreateIfNotExistsAsync();
-                TableOperation insertOperation = TableOperation.Insert(conversationInformation);
-                await table.ExecuteAsync(insertOperation);
+                // Store conversation reference (Use this info when send a proactive message to user after).
+                await StoreConversationInformation(context);
 
                 // TODO hiroaki-honda Implement the logic to hook the function which request connection to ChatPlus
                 // Status: Ask chatplus to prepare the API which receive the request to connect to agent
 
-                // Set connecting state true 
+                // Set connecting state true
                 var state = context.GetUserState<ConnectionState>();
                 state.IsConnectedToAgent = true;
             }
@@ -99,6 +86,24 @@ namespace TravelBotv4.Middlewares
             {
                 await next();
             }
+        }
+
+        private async Task StoreConversationInformation(IBotContext context)
+        {
+            var conversationReference = GetConversationReference(context.Request);
+            var conversationInformation = new ConversationInformation()
+            {
+                PartitionKey = "ConversationInformation",
+                RowKey = conversationReference.User.Id,
+                conversationReference = conversationReference,
+                MessageFromUser = context.Request.Text
+            };
+            CloudStorageAccount account = buildStorageAccount();
+            CloudTableClient tableClient = account.CreateCloudTableClient();
+            CloudTable table = tableClient.GetTableReference("ConversationInformation");
+            await table.CreateIfNotExistsAsync();
+            TableOperation insertOperation = TableOperation.Insert(conversationInformation);
+            await table.ExecuteAsync(insertOperation);
         }
 
         public static ConversationReference GetConversationReference(Activity activity)
