@@ -4,6 +4,10 @@ using PromptlyBot;
 using PromptlyBot.Prompts;
 using PromptlyBot.Validator;
 using System.Threading.Tasks;
+using Microsoft.Bot.Builder.LUIS;
+using System.Threading;
+using TravelBotv4.Services.Models;
+using System.Linq;
 
 namespace TravelBotv4.Topics
 {
@@ -57,21 +61,40 @@ namespace TravelBotv4.Topics
 
         }
 
-        public override Task OnReceiveActivity(IBotContext context)
+        private async Task<RecognizerResult> playLuis(IBotContext botContext, string utterance)
+        {
+            await botContext.SendActivity("Start LUIS");
+            
+            // finder
+            var luisModel = new LuisModel("", "", new System.Uri("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/178e1700-34e6-401b-8d60-f831b0b449ad?subscription-key=50110d00f75b486480efa8fd8b537552&verbose=true&timezoneOffset=0&q="));
+            // feedback
+            //var luisModel = new LuisModel("", "", new System.Uri("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/3a3abee2-3567-4f85-9fc6-2d17a3189a08?subscription-key=50110d00f75b486480efa8fd8b537552&verbose=true&timezoneOffset=0&q="));
+
+            var luisRecognizer = new LuisRecognizer(luisModel);
+            return await luisRecognizer.Recognize(utterance, CancellationToken.None);
+        }
+
+
+        public override async Task OnReceiveActivity(IBotContext context)
         {
             if (HasActiveTopic)
             {
-                ActiveTopic.OnReceiveActivity(context);
-                return Task.CompletedTask;
+                await ActiveTopic.OnReceiveActivity(context);
             }
 
-
+            var utterance = context.Request.AsMessageActivity().Text;
 
             // LUIS実行
-            context.SendActivity("got it!");
+            await context.SendActivity("got it!");
+            var luisResult = await playLuis(context, utterance);
 
 
-            // LUISの戻り値に応じて呼び出すAPIを変更する
+            // TODO: LUISの戻り値に応じて呼び出すAPIを変更する
+            var intent = luisResult.Intents.GetValue("Places.FindPlace");
+            var entity = luisResult.Entities.GetValue("Places_AbsoluteLocation");
+            var entity_keyword = entity.First().ToString();
+            await context.SendActivity(entity_keyword.ToString());
+
             /*
             if (this.State.Alarm.Title == "Searched") {
                 this.SetActiveTopic(SEARCH_PROMPT)
@@ -79,30 +102,46 @@ namespace TravelBotv4.Topics
                 return Task.CompletedTask;
 
             }
-            */
 
-            if (this.State.Alarm.Title == null) // spotの場合
-            {
-                context.SendActivity("スポット表示");
+            */
+            // LUISの結果でスポット検索
+            var service = new Services.SpotSearchService();
+            var req = new SpotsRequest();
+            req.keyword = entity_keyword;
+            var result = await service.Search(req) as SpotsResult;
+            await context.SendActivity(result.spots.First().name);
+
+            // Replyを作成し表示
+            var reply = context.Request.CreateReply();
+            reply.Attachments = result.Attachments;
+            await context.SendActivity(reply);
+
+            // next feed back prompt
+            await this.SetActiveTopic(FEEDBACK_PROMPT)
+                .OnReceiveActivity(context);
+
+
+            /*
+            if (this.State.Alarm.Title == null) {// spotの場合
+                await context.SendActivity("スポット表示");
                 this.State.Alarm.Title = "Searched";
 
                 // APIの戻り値表示
 
                 // next feed back prompt
-                this.SetActiveTopic(FEEDBACK_PROMPT)
+                await this.SetActiveTopic(FEEDBACK_PROMPT)
                     .OnReceiveActivity(context);
-                return Task.CompletedTask;
             }
             else {
-                context.SendActivity("スポット表示失敗");
+                await context.SendActivity("スポット表示失敗");
             }
-            context.SendActivity("すみません、お役に立てなくて");
+            await context.SendActivity("すみません、お役に立てなくて");
             this.OnSuccess(context, null);
 
 
-            context.SendActivity("ここまでくれば終了で抜けます");
+            await context.SendActivity("ここまでくれば終了で抜けます");
             this.OnSuccess(context, this.State.Alarm);
-            return Task.CompletedTask;
+            */
         }
     }
 
