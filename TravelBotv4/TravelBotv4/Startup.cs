@@ -80,9 +80,9 @@ namespace TravelBotv4
 
         public void InitializeMessageRouting()
         {
-            Settings = new BotSettings();
             string connectionString = Configuration.GetConnectionString("RoutingDataStorageConnectionString");
-            //string connectionString = Settings[BotSettings.KeyRoutingDataStorageConnectionString];
+            Settings = new BotSettings();
+            Settings.ConnectionString = connectionString;
             IRoutingDataManager routingDataManager = null;
 
             if (string.IsNullOrEmpty(connectionString))
