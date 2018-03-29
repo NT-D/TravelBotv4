@@ -39,10 +39,12 @@ namespace TravelBotv4.Middlewares
                 switch (activity.From.Id)
                 {
                     case "WebhookStartChat":
-                        await SendProactiveMessage(context, conversationReference);
+                        string messageForSuccessToConnect = "Success to make a connection with call center agent. Please let us know what makes you in trouble.";
+                        await SendProactiveMessage(context, conversationReference, messageForSuccessToConnect);
                         break;
                     case "WebhookSendMessage":
-                        await SendProactiveMessage(context, conversationReference);
+                        string messageFromAgent = JsonConvert.DeserializeObject<ChatPlusInformation>(activity.Value.ToString()).message.text;
+                        await SendProactiveMessage(context, conversationReference, messageFromAgent);
                         break;
                     default:
                         throw new Exception("unexpected event type message");
@@ -116,10 +118,15 @@ namespace TravelBotv4.Middlewares
             return r;
         }
 
-        private async Task SendProactiveMessage(IBotContext context, ConversationReference conversationReference)
+        private async Task SendProactiveMessage(IBotContext context, ConversationReference conversationReference, string messageFromAgent)
         {
             // TODO hiroaki-honda Implement logic to send proactive message to user
-            //context.Adapter.ContinueConversation()
+            await context.Adapter.ContinueConversation(conversationReference, (IBotContext _context) => PassTheMessageToUserFromAgent(_context, messageFromAgent));
+        }
+
+        public async Task PassTheMessageToUserFromAgent(IBotContext context, string message)
+        {
+            await context.SendActivity(message);
         }
 
         private T Deserialize<T>(string name, Activity activity)
