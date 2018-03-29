@@ -17,52 +17,19 @@ namespace TravelBotv4.Topics
 
     public class RootTopic : TopicsRoot<BotConversationState, RootTopicState>
     {
-        private const string SEARCH_TOPIC = "SearchTopic";
-        private const string CHIT_CHAT_TOPIC = "chitChatTopic";
-        private const string ChitChatKey = "chitChatKey";
+        private const string SELECT_QUESTION_TOPIC = "SelectQuestionTopic";
         private QnAMaker qnAMaker;
 
         public RootTopic(IBotContext context) : base(context)
         {
             // User state initialization should be done once in the welcome 
             //  new user feature. Placing it here until that feature is added.
-            //if (context.GetUserState<BotUserState>().Alarms == null)
-            //{
-            //    context.GetUserState<BotUserState>().Alarms = new List<Alarm>();
-            //}
 
-            this.SubTopics.Add(CHIT_CHAT_TOPIC, (object[] args) =>
+            this.SubTopics.Add(SELECT_QUESTION_TOPIC, (object[] args) =>
             {
-                var chitChatTopic = new ChitChatTopic();
+                var SelectQuestionTopic = new SelectQuestionTopic();
 
-                chitChatTopic.Set
-                    .OnSuccess((ctx, alarm) =>
-                    {
-                        this.ClearActiveTopic();
-
-                        //ctx.GetUserState<BotUserState>().Alarms.Add(alarm);
-
-                        //context.SendActivity("test");
-                    })
-                    .OnFailure((ctx, reason) =>
-                    {
-                        this.ClearActiveTopic();
-
-                        context.SendActivity("FailureMessage");
-
-                        //this.ShowDefaultMessage(ctx);
-                    });
-
-                return chitChatTopic;
-            });
-
-
-            // Searcher
-            this.SubTopics.Add(SEARCH_TOPIC, (object[] args) =>
-            {
-                var searchTopic = new SearchTopic();
-
-                searchTopic.Set
+                SelectQuestionTopic.Set
                     .OnSuccess((ctx, alarm) =>
                     {
                         this.ClearActiveTopic();
@@ -73,7 +40,7 @@ namespace TravelBotv4.Topics
                         this.ClearActiveTopic();
                         context.SendActivity($"TopicのOnFailure"); ;
                     });
-                return searchTopic;
+                return SelectQuestionTopic;
             });
         }
 
@@ -90,29 +57,22 @@ namespace TravelBotv4.Topics
                     await ActiveTopic.OnReceiveActivity(context);
                     return;
                 }
-                // Feedbackに該当しない場合は、自動的に下記処理に流れる
 
-
-                // APIの結果に応じて分岐する
-
-                // CHITかどうかの判定
+                // CHIT
                 // if() {
-                //await this.SetActiveTopic(CHIT_CHAT_TOPIC)
-                //.OnReceiveActivity(context);
                 // }
 
                 // QnA
                 // if() {
-                //await this.SetActiveTopic()
-                //.OnReceiveActivity(context);
                 // }
 
                 // Searchf
                 // if() {
-                await this.SetActiveTopic(SEARCH_TOPIC)
-                    .OnReceiveActivity(context);
                 //}
-                // Feedbackは、SearchのSubPromptのためここには不要
+
+                // Feedback
+                // if() {
+                //}
 
             }
         }
