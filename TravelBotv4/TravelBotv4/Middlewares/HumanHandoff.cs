@@ -23,6 +23,11 @@ namespace TravelBotv4.Middlewares
         {
             var activity = context.Request.AsMessageActivity();
 
+            if (activity == null)
+            {
+                await next();
+            }
+
             // Handle the message from functions contains ChatPlus's webhook response
             if (activity.Type == ActivityTypes.Event)
             {
@@ -42,8 +47,8 @@ namespace TravelBotv4.Middlewares
                 }
             }
 
-            var connectionState = context.GetConversationState<ConnectionState>();
-            if (connectionState.IsConnectedToAgent)
+            var connectionState = context.GetUserState<ConnectionState>();
+            if (connectionState != null && connectionState.IsConnectedToAgent)
             {
                 // TODO hiroaki-honda Hook the function which send message to agent
             }
@@ -72,7 +77,7 @@ namespace TravelBotv4.Middlewares
                 // Status: Ask chatplus to prepare the API which receive the request to connect to agent
 
                 // Set connecting state true 
-                var state = context.GetConversationState<ConnectionState>();
+                var state = context.GetUserState<ConnectionState>();
                 state.IsConnectedToAgent = true;
             }
             else
