@@ -8,6 +8,7 @@ using Microsoft.Bot.Builder.Core.Extensions;
 using Microsoft.Bot.Builder.Integration.AspNet.WebApi;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.WindowsAzure.Storage.Queue;
 using Underscore.Bot.MessageRouting;
 using TravelBotv4.MessageRouting;
 using TravelBotv4.CommandHandling;
@@ -46,11 +47,22 @@ namespace TravelBotv4.Middlewares
                         throw new Exception("unexpected event type message");
                 }
             }
-
+            
+            // Enqueue the message to hook the function which passes the message to agent if "IsConnectedToAgent" is true.
             var connectionState = context.GetUserState<ConnectionState>();
             if (connectionState != null && connectionState.IsConnectedToAgent)
             {
-                // TODO hiroaki-honda Hook the function which send message to agent
+                CloudStorageAccount account = buildStorageAccount();
+                CloudQueueClient cloudQueueClient = account.CreateCloudQueueClient();
+                CloudQueue queue = cloudQueueClient.GetQueueReference("message-from-user");
+                var item = new ConversationInformation()
+                {
+                    conversationReference = GetConversationReference((Activity)activity),
+                    MessageFromUser = context.Request.Text
+                };
+                var message = new CloudQueueMessage(JsonConvert.SerializeObject(item));
+                await queue.AddMessageAsync(message);
+                return;
             }
 
             // Request to make a connection between user and agent
@@ -66,8 +78,7 @@ namespace TravelBotv4.Middlewares
                     conversationReference = conversationReference,
                     MessageFromUser = context.Request.Text
                 };
-                var storageConnectionString = Startup.Settings["KeyRoutingDataStorageConnectionString"];
-                CloudStorageAccount account = CloudStorageAccount.Parse(storageConnectionString);
+                CloudStorageAccount account = buildStorageAccount();
                 CloudTableClient tableClient = account.CreateCloudTableClient();
                 CloudTable table = tableClient.GetTableReference("ConversationInformation");
                 await table.CreateIfNotExistsAsync();
@@ -118,6 +129,13 @@ namespace TravelBotv4.Middlewares
         {
             // TODO hiroaki-honda Implement the logic to get ConversationReferenc from table storage using userId as key
             return null;
+        }
+
+        private CloudStorageAccount buildStorageAccount()
+        {
+            var storageConnectionString = Startup.Settings["KeyRoutingDataStorageConnectionString"];
+            CloudStorageAccount account = CloudStorageAccount.Parse(storageConnectionString);
+            return account;
         }
     }
 }

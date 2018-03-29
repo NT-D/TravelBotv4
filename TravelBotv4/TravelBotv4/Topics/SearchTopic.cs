@@ -7,24 +7,26 @@ using System.Threading.Tasks;
 
 namespace TravelBotv4.Topics
 {
-    public class AddAlarmTopicState : ConversationTopicState
+    public class SearchTopicState : ConversationTopicState
     {
     }
 
-    public class AddAlarmTopic : ConversationTopic<AddAlarmTopicState, Alarm>
+    public class SearchTopic : ConversationTopic<SearchTopicState, Alarm>
     {
-        private const string TITLE_PROMPT = "titlePrompt";
+        private const string SEARCH_PROMPT = "searchPrompt";
+        private const string FEEDBACK_PROMPT = "feedbackPrompt";
 
-        public AddAlarmTopic() : base()
+        public SearchTopic() : base()
         {
-            this.SubTopics.Add(TITLE_PROMPT, (object[] args) =>
+            // Search
+            this.SubTopics.Add(SEARCH_PROMPT, (object[] args) =>
             {
-                var titlePrompt = new Prompt<string>();
+                var searchPrompt = new Prompt<string>();
 
-                titlePrompt.Set
+                searchPrompt.Set
                     .OnPrompt((context, lastTurnReason) =>
                     {
-                        context.SendActivity("Prompt");
+                        context.SendActivity("SearchPrompt");
                     })
                     .Validator(new DummyValidator())
                     .MaxTurns(2)
@@ -32,19 +34,48 @@ namespace TravelBotv4.Topics
                     {
                         this.ClearActiveTopic();
                         this.OnReceiveActivity(context);
-                        context.SendActivity("OnFailure");
+                        context.SendActivity("OnSuccess! ClearActiveTopic!");
 
                     })
                     .OnFailure((context, reason) =>
                     {
                         this.ClearActiveTopic();
                         this.OnReceiveActivity(context);
-                        context.SendActivity("OnFailure");
+                        context.SendActivity("OnFailure! ClearActiveTopic!");
                     });
 
-                return titlePrompt;
+                return searchPrompt;
             });
-            
+
+            // Feedback
+            this.SubTopics.Add(FEEDBACK_PROMPT, (object[] args) =>
+            {
+                var feedbackPrompt = new Prompt<string>();
+
+                feedbackPrompt.Set
+                    .OnPrompt((context, lastTurnReason) =>
+                    {
+                        context.SendActivity("feedbackPrompt");
+                    })
+                    .Validator(new DummyValidator())
+                    .MaxTurns(2)
+                    .OnSuccess((context, value) =>
+                    {
+                        this.ClearActiveTopic();
+                        this.OnReceiveActivity(context);
+                        context.SendActivity("OnSuccess! ClearActiveTopic!");
+
+                    })
+                    .OnFailure((context, reason) =>
+                    {
+                        this.ClearActiveTopic();
+                        this.OnReceiveActivity(context);
+                        context.SendActivity("OnFailure! ClearActiveTopic!");
+                    });
+
+                return feedbackPrompt;
+            });
+
         }
 
         public override Task OnReceiveActivity(IBotContext context)
@@ -60,9 +91,13 @@ namespace TravelBotv4.Topics
 
             // LUISの戻り値に応じて呼び出すAPIを変更する
 
-            if (true) //　planの場合
+
+            if (true) // spotの場合
             {
-                this.SetActiveTopic(TITLE_PROMPT)
+                // APIの戻り値表示
+
+                // next feed back prompt
+                this.SetActiveTopic(FEEDBACK_PROMPT)
                     .OnReceiveActivity(context);
                 return Task.CompletedTask;
             }
