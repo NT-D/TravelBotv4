@@ -88,6 +88,7 @@ namespace TravelBotv4.Topics
                 if (HasActiveTopic)
                 {
                     await ActiveTopic.OnReceiveActivity(context);
+                    return;
                 }
                 // Feedbackに該当しない場合は、自動的に下記処理に流れる
 
@@ -96,18 +97,22 @@ namespace TravelBotv4.Topics
 
                 // CHITかどうかの判定
                 // if() {
-                await this.SetActiveTopic(CHIT_CHAT_TOPIC)
-                    .OnReceiveActivity(context);
+                //await this.SetActiveTopic(CHIT_CHAT_TOPIC)
+                //.OnReceiveActivity(context);
                 // }
 
                 // QnA
+                // if() {
+                //await this.SetActiveTopic()
+                //.OnReceiveActivity(context);
+                // }
 
-                // Search
+                // Searchf
                 // if() {
                 await this.SetActiveTopic(SEARCH_TOPIC)
                     .OnReceiveActivity(context);
                 //}
-                // Feedbackは、SearchのSubtopicのためここには不要
+                // Feedbackは、SearchのSubPromptのためここには不要
 
             }
         }
