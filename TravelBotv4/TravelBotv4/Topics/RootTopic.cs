@@ -60,9 +60,9 @@ namespace TravelBotv4.Topics
             // Searcher
             this.SubTopics.Add(SEARCH_TOPIC, (object[] args) =>
             {
-                var addAlarmTopic = new AddAlarmTopic();
+                var searchTopic = new SearchTopic();
 
-                addAlarmTopic.Set
+                searchTopic.Set
                     .OnSuccess((ctx, alarm) =>
                     {
                         this.ClearActiveTopic();
@@ -73,7 +73,7 @@ namespace TravelBotv4.Topics
                         this.ClearActiveTopic();
                         context.SendActivity($"TopicのOnFailure"); ;
                     });
-                return addAlarmTopic;
+                return searchTopic;
             });
         }
 

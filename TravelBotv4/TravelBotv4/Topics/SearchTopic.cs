@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 
 namespace TravelBotv4.Topics
 {
-    public class AddAlarmTopicState : ConversationTopicState
+    public class SearchTopicState : ConversationTopicState
     {
     }
 
-    public class AddAlarmTopic : ConversationTopic<AddAlarmTopicState, Alarm>
+    public class SearchTopic : ConversationTopic<SearchTopicState, Alarm>
     {
         private const string SEARCH_PROMPT = "searchPrompt";
         private const string FEEDBACK_PROMPT = "feedbackPrompt";
 
-        public AddAlarmTopic() : base()
+        public SearchTopic() : base()
         {
             // Search
             this.SubTopics.Add(SEARCH_PROMPT, (object[] args) =>
