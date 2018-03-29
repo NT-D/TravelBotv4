@@ -39,7 +39,7 @@ namespace TravelBotv4.Topics
                     {
                         this.State.Alarm.Title = "Searched";
 
-                        this.ClearActiveTopic();
+                        // this.ClearActiveTopic();
                         context.SendActivity("[feedbackPrompt] OnSuccess! ClearActiveTopic!");
                         // SearchTopicを抜ける
                         //this.OnSuccess(context, null);
@@ -52,7 +52,7 @@ namespace TravelBotv4.Topics
                     })
                     .OnFailure((context, reason) =>
                     {
-                        this.ClearActiveTopic();
+                        // this.ClearActiveTopic();
                         context.SendActivity("[feedbackPrompt] OnFailure! ClearActiveTopic!");
                     });
 
@@ -65,61 +65,85 @@ namespace TravelBotv4.Topics
         {
             await botContext.SendActivity("Start LUIS");
             
+            
             // finder
             var luisModel = new LuisModel("", "", new System.Uri("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/178e1700-34e6-401b-8d60-f831b0b449ad?subscription-key=50110d00f75b486480efa8fd8b537552&verbose=true&timezoneOffset=0&q="));
             // feedback
             //var luisModel = new LuisModel("", "", new System.Uri("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/3a3abee2-3567-4f85-9fc6-2d17a3189a08?subscription-key=50110d00f75b486480efa8fd8b537552&verbose=true&timezoneOffset=0&q="));
-
+            
             var luisRecognizer = new LuisRecognizer(luisModel);
             return await luisRecognizer.Recognize(utterance, CancellationToken.None);
         }
 
+        public Task ok_OnReceiveActivity(IBotContext context)
+        {
+            if (HasActiveTopic)
+            {
+                ActiveTopic.OnReceiveActivity(context);
+                return Task.CompletedTask;
+            }
+            
+            // next feed back prompt
+            this.SetActiveTopic(FEEDBACK_PROMPT)
+            .OnReceiveActivity(context);
+            context.SendActivity($"{HasActiveTopic}");
+            return Task.CompletedTask;
+
+        }
 
         public override async Task OnReceiveActivity(IBotContext context)
         {
             if (HasActiveTopic)
             {
                 await ActiveTopic.OnReceiveActivity(context);
+                return;
             }
 
             var utterance = context.Request.AsMessageActivity().Text;
 
-            // LUIS実行
-            await context.SendActivity("got it!");
-            var luisResult = await playLuis(context, utterance);
+
+            if (this.State.Alarm.Title == null)
+            {
+                // LUIS実行
+                await context.SendActivity("got it!");
+                var luisResult = await playLuis(context, utterance);
 
 
-            // TODO: LUISの戻り値に応じて呼び出すAPIを変更する
-            var intent = luisResult.Intents.GetValue("Places.FindPlace");
-            var entity = luisResult.Entities.GetValue("Places_AbsoluteLocation");
-            var entity_keyword = entity.First().ToString();
-            await context.SendActivity(entity_keyword.ToString());
+                // TODO: LUISの戻り値に応じて呼び出すAPIを変更する
+                var intent = luisResult.Intents.GetValue("Places.FindPlace");
+                var entity = luisResult.Entities.GetValue("Places_AbsoluteLocation");
+                var entity_keyword = entity.First().ToString();
+                await context.SendActivity(entity_keyword.ToString());
 
-            /*
-            if (this.State.Alarm.Title == "Searched") {
-                this.SetActiveTopic(SEARCH_PROMPT)
+                /*
+                if (this.State.Alarm.Title == "Searched") {
+                    this.SetActiveTopic(SEARCH_PROMPT)
+                        .OnReceiveActivity(context);
+                    return Task.CompletedTask;
+
+                }
+
+                */
+                // LUISの結果でスポット検索
+                var service = new Services.SpotSearchService();
+                var req = new SpotsRequest();
+                req.keyword = entity_keyword;
+                var result = await service.Search(req) as SpotsResult;
+                await context.SendActivity(result.spots.First().name);
+
+                // Replyを作成し表示
+                var reply = context.Request.CreateReply();
+                reply.Attachments = result.Attachments;
+                await context.SendActivity(reply);
+
+                // next feed back prompt
+                await this.SetActiveTopic(FEEDBACK_PROMPT)
                     .OnReceiveActivity(context);
-                return Task.CompletedTask;
+                await context.SendActivity($"{HasActiveTopic}");
 
+
+                return;
             }
-
-            */
-            // LUISの結果でスポット検索
-            var service = new Services.SpotSearchService();
-            var req = new SpotsRequest();
-            req.keyword = entity_keyword;
-            var result = await service.Search(req) as SpotsResult;
-            await context.SendActivity(result.spots.First().name);
-
-            // Replyを作成し表示
-            var reply = context.Request.CreateReply();
-            reply.Attachments = result.Attachments;
-            await context.SendActivity(reply);
-
-            // next feed back prompt
-            await this.SetActiveTopic(FEEDBACK_PROMPT)
-                .OnReceiveActivity(context);
-
 
             /*
             if (this.State.Alarm.Title == null) {// spotの場合
@@ -138,10 +162,10 @@ namespace TravelBotv4.Topics
             await context.SendActivity("すみません、お役に立てなくて");
             this.OnSuccess(context, null);
 
-
-            await context.SendActivity("ここまでくれば終了で抜けます");
-            this.OnSuccess(context, this.State.Alarm);
             */
+            await context.SendActivity("ここまでくれば終了で抜けます");
+            //this.OnSuccess(context, this.State.Alarm);
+            
         }
     }
 
