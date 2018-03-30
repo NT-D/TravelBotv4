@@ -3,6 +3,7 @@ using Microsoft.Bot.Builder.Ai;
 using Microsoft.Bot.Builder.Core.Extensions;
 using Microsoft.Bot.Schema;
 using PromptlyBot;
+using PromptlyBot.Prompts;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,31 +20,42 @@ namespace TravelBotv4.Topics
     public class RootTopic : TopicsRoot<BotConversationState, RootTopicState>
     {
         private const string SELECT_QUESTION_TOPIC = "SelectQuestionTopic";
-        private QnAMaker qnAMaker;
+        private const string SELECT_QUESTION_PROMPT = "SelectQuestionPrompt";
         private static bool SearcherFeedbackStaet = false;
-
+        private static bool SelectQuestionState = false;
+        private static string qnaanswer = string.Empty;
+        private static string[] questionlist = null;
 
         public RootTopic(IBotContext context) : base(context)
         {
             // User state initialization should be done once in the welcome 
             //  new user feature. Placing it here until that feature is added.
-
-            this.SubTopics.Add(SELECT_QUESTION_TOPIC, (object[] args) =>
+            this.SubTopics.Add("SelectQuestionPrompt", (object[] args) =>
             {
-                var SelectQuestionTopic = new SelectQuestionTopic();
+                var SelectQuesttionPrompt = new Prompt<string>();
 
-                SelectQuestionTopic.Set
-                    .OnSuccess((ctx, alarm) =>
+                SelectQuesttionPrompt.Set
+                    .OnPrompt(qnaanswer)
+                    .MaxTurns(2)
+                    .OnSuccess((ctx, value) =>
                     {
                         this.ClearActiveTopic();
-                        context.SendActivity($"TopicのOnSuccess");
+
+                        //this.State.Name = value;
+                        context.SendActivity(qnaanswer);
+
+                        this.OnReceiveActivity(context);
                     })
                     .OnFailure((ctx, reason) =>
                     {
                         this.ClearActiveTopic();
-                        context.SendActivity($"TopicのOnFailure"); ;
+
+                        context.SendActivity("I'm sorry I'm having issues understanding you.");
+
+                        this.OnReceiveActivity(context);
                     });
-                return SelectQuestionTopic;
+
+                return SelectQuesttionPrompt;
             });
         }
 
@@ -72,11 +84,7 @@ namespace TravelBotv4.Topics
                     await context.SendActivity(answer);
                     return;
                 }
-
-                // QnA
-                // if() {
-                // }
-
+                
                 // Feedback
                 if (SearcherFeedbackStaet)
                 {
@@ -93,6 +101,37 @@ namespace TravelBotv4.Topics
                     }
                     // Not reterun and continue next line when you get NOEN intent.
                 }
+
+                // QnA
+                var qnamaker = new QnaMaker();
+                var queryresults = await qnamaker.SearchQnaMaker(message.Text);
+
+                if (queryresults != null)
+                    if (queryresults.First().Questions.Count() == 1)
+                    {
+                        await context.SendActivity(queryresults.First().Answer);
+                        return;
+                    }
+                    else
+                    {
+                        SearcherFeedbackStaet = true;
+                        var messages = "Did you mean? Please input number(1 - 4)";
+
+                        foreach (var q in queryresults.First().Questions.Select((value, index) => new { value, index }))
+                        {
+                            if (q.index > 2)
+                            {
+                                messages += "\n\n" + "\n\n" + (q.index + 1) + ".None of adove";
+                                break;
+                            }
+                            messages += "\n\n" + "\n\n" + (q.index + 1) + "." + queryresults.First().Questions[q.index].ToString();
+                        }
+                        qnaanswer = messages;
+
+                        await this.SetActiveTopic(SELECT_QUESTION_PROMPT)
+                                .OnReceiveActivity(context);
+                        return;
+                    }
 
                 // Search
                 var finder = new Finder();
