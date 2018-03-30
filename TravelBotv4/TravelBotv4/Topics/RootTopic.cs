@@ -7,6 +7,8 @@ using PromptlyBot.Prompts;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TravelBotv4.Middlewares;
+using TravelBotv4.Models;
 using TravelBotv4.Services;
 using TravelBotv4.Services.Models;
 
@@ -21,7 +23,7 @@ namespace TravelBotv4.Topics
     {
         private const string SELECT_QUESTION_TOPIC = "SelectQuestionTopic";
         private const string SELECT_QUESTION_PROMPT = "SelectQuestionPrompt";
-        private static bool SearcherFeedbackStaet = false;
+        private static bool SearcherFeedbackState = false;
         private static bool SelectQuestionState = false;
         private static string qnaanswer = string.Empty;
         private static string[] questionlist = null;
@@ -62,6 +64,21 @@ namespace TravelBotv4.Topics
 
         public async override Task OnReceiveActivity(IBotContext context)
         {
+            // IMAGE
+            var image = context.Get<ImageRecognizeResult>(ImageMiddleware.ImageRecognizerResultKey);
+            if (image != null)
+            {
+                var result = await searchWithImage(context, image);
+                if (result != null)
+                {
+                    SearcherFeedbackState = true;
+                    var activity = createReply(context, result);
+                    await context.SendActivity(activity);
+                    await context.SendActivity("Did you find what you ware looking for?");
+                    return;
+                }
+            }
+
             if ((context.Request.Type == ActivityTypes.Message) && (context.Request.AsMessageActivity().Text.Length > 0))
             {
                 var message = context.Request.AsMessageActivity();
@@ -72,7 +89,7 @@ namespace TravelBotv4.Topics
                     await ActiveTopic.OnReceiveActivity(context);
                     return;
                 }
-                if (!SearcherFeedbackStaet) {
+                if (!SearcherFeedbackState) {
                     await context.SendActivity("Got it!");
                 }
 
@@ -86,9 +103,9 @@ namespace TravelBotv4.Topics
                 }
                 
                 // Feedback
-                if (SearcherFeedbackStaet)
+                if (SearcherFeedbackState)
                 {
-                    SearcherFeedbackStaet = false;
+                    SearcherFeedbackState = false;
                     var feedbacker = new Feedbacker();
                     var feedback = await feedbacker.SearchAsync(message.Text);
                     if (feedback == Feedbacker.INTENT.FEEDBACK_NEGATIVE) {
@@ -114,7 +131,7 @@ namespace TravelBotv4.Topics
                     }
                     else
                     {
-                        SearcherFeedbackStaet = true;
+                        SearcherFeedbackState = true;
                         var messages = "Did you mean? Please input number(1 - 4)";
 
                         foreach (var q in queryresults.First().Questions.Select((value, index) => new { value, index }))
@@ -137,7 +154,7 @@ namespace TravelBotv4.Topics
                 var finder = new Finder();
                 var result = await finder.SearchAsync(message.Text);
                 if (result != null) {
-                    SearcherFeedbackStaet = true;
+                    SearcherFeedbackState = true;
                     var activity = createReply(context, result);
                     await context.SendActivity(activity);
                     await context.SendActivity("Did you find what you ware looking for?");
@@ -145,6 +162,16 @@ namespace TravelBotv4.Topics
                 }
                 await context.SendActivity("Sorry, but I didn't understand that. Could you try saying that another way?");
             }
+        }
+        public async Task<BaseSearchResult> searchWithImage(IBotContext context, ImageRecognizeResult image)
+        {
+            string keyword = null;
+            if (image.RecognizedServiceType == ImageServiceType.ComputerVisionService)
+            {
+                keyword = image.ComputerVisionResult.Result.Landmarks?[0].Name;
+            }
+            var finder = new Finder();
+            return await finder.SearchWithKeywordAsync(keyword);
         }
         private Activity createReply(IBotContext context, BaseSearchResult result)
         {

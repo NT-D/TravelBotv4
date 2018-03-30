@@ -12,15 +12,11 @@ namespace TravelBotv4.Services
 {
     public class Finder 
     {
-        /*
+        
         private static string ModelId = "";
         private static string SubscriptionKey = "";
         private static string StreamUrl = "";
-        */
-        private static string ModelId = "178e1700-34e6-401b-8d60-f831b0b449ad";
-        private static string SubscriptionKey = "50110d00f75b486480efa8fd8b537552";
-        private static string StreamUrl = "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/178e1700-34e6-401b-8d60-f831b0b449ad?subscription-key=50110d00f75b486480efa8fd8b537552&verbose=true&timezoneOffset=0&q=";
-
+        
 
         private enum INTENT : UInt16 {
             NONE = 0,
@@ -32,10 +28,29 @@ namespace TravelBotv4.Services
 
         private static SpotsRequest previous_request = null;
 
+        public async Task<BaseSearchResult> SearchWithKeywordAsync(string keyword)
+        {
+            return await SearchWithKeyword(keyword);
+        }
         public async Task<BaseSearchResult> SearchAsync(string utterance)
         {
             return await Search(utterance);
         }
+        
+        public async Task<BaseSearchResult> SearchWithKeyword(string keyword)
+        {
+            try
+            {
+                var request = createSpotNameFieldRequest(keyword);
+                previous_request = request;               
+                return await searchSpotAsync(request); ;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+        
 
         public async Task<BaseSearchResult> Search(string utterance)
         {
@@ -129,6 +144,13 @@ namespace TravelBotv4.Services
         {
             var request = new SpotsRequest();
             request.keyword = entity;
+            return request;
+        }
+        private SpotsRequest createSpotNameFieldRequest(string keyword)
+        {
+            var request = new SpotsRequest();
+            request.keyword = keyword;
+            request.search_fields = "name";
             return request;
         }
         private async Task<SpotsResult> searchSpotAsync(SpotsRequest request)
