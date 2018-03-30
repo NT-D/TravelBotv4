@@ -64,7 +64,7 @@ namespace TravelBotv4.Middlewares
                 CloudQueue queue = cloudQueueClient.GetQueueReference("message-from-user");
                 var item = new ConversationInformation()
                 {
-                    conversationReference = JsonConvert.SerializeObject(GetConversationReference((Microsoft.Bot.Schema.Activity)activity)),
+                    ConversationReference = JsonConvert.SerializeObject(GetConversationReference((Microsoft.Bot.Schema.Activity)activity)),
                     MessageFromUser = context.Request.Text
                 };
                 var message = new CloudQueueMessage(JsonConvert.SerializeObject(item));
@@ -102,7 +102,7 @@ namespace TravelBotv4.Middlewares
             {
                 PartitionKey = "ConversationInformation",
                 RowKey = conversationReference.User.Id,
-                conversationReference = JsonConvert.SerializeObject(conversationReference),
+                ConversationReference = JsonConvert.SerializeObject(conversationReference),
                 MessageFromUser = context.Request.Text
             };
             CloudStorageAccount account = buildStorageAccount();
@@ -162,7 +162,7 @@ namespace TravelBotv4.Middlewares
             TableOperation getConversationInformation = TableOperation.Retrieve("ConversationInformation", userId);
             var res = await table.ExecuteAsync(getConversationInformation);
             var conversationInformation = (ConversationInformation)res.Result;
-            return JsonConvert.DeserializeObject<ConversationReference>(conversationInformation.conversationReference);
+            return JsonConvert.DeserializeObject<ConversationReference>(conversationInformation.ConversationReference);
         }
 
         private CloudStorageAccount buildStorageAccount()
