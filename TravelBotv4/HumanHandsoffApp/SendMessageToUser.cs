@@ -10,14 +10,27 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Bot.Connector;
+using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.WindowsAzure.Storage;
+using HumanHandsoffApp.Models;
 
 namespace HumanHandsoffApp
 {
     public static class SendMessageToUser
     {
+        public static CloudTableClient client;
         [FunctionName(nameof(SendMessageToUser))]
         public async static Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]HttpRequest req, TraceWriter log)
         {
+            var account = CloudStorageAccount.Parse("<Your Storage Connection String>");
+            client = account.CreateCloudTableClient();
+            CloudTable table = client.GetTableReference("ConversationInformation");
+            await table.CreateIfNotExistsAsync();
+            TableOperation getOperation = TableOperation.Retrieve<ConversationInformation>(partitionKey: "ConversationInformation", rowkey: "default-user");
+            var info = await table.ExecuteAsync(getOperation);
+            var conversationInformation = info.Result as ConversationInformation;
+            var conversationReference = JsonConvert.DeserializeObject<ConversationReference>(conversationInformation.ConversationReference);
+
             //TODO: Need to refactor.
             log.Info("C# HTTP trigger function processed a request.");
 
