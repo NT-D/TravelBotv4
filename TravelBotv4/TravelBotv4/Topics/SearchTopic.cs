@@ -67,9 +67,9 @@ namespace TravelBotv4.Topics
             
             
             // finder
-            var luisModel = new LuisModel("", "", new System.Uri("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/178e1700-34e6-401b-8d60-f831b0b449ad?subscription-key=50110d00f75b486480efa8fd8b537552&verbose=true&timezoneOffset=0&q="));
+            var luisModel = new LuisModel("", "", new System.Uri(""));
             // feedback
-            //var luisModel = new LuisModel("", "", new System.Uri("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/3a3abee2-3567-4f85-9fc6-2d17a3189a08?subscription-key=50110d00f75b486480efa8fd8b537552&verbose=true&timezoneOffset=0&q="));
+            //var luisModel = new LuisModel("", "", new System.Uri(""));
             
             var luisRecognizer = new LuisRecognizer(luisModel);
             return await luisRecognizer.Recognize(utterance, CancellationToken.None);
