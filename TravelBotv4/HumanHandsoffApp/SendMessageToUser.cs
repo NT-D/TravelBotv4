@@ -15,22 +15,30 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Bot.Connector;
-using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.WindowsAzure.Storage;
 using HumanHandsoffApp.Models;
 
 namespace HumanHandsoffApp
 {
     public static class SendMessageToUser
     {
-        public static IConfiguration configuration { get; set; }
-
+        public static CloudTableClient client;
         [FunctionName(nameof(SendMessageToUser))]
         public async static Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]HttpRequest req, 
             [Table(tableName:"ConversationInformation", partitionKey: "ConversationInformation", Connection = "HumanHandsoffStorage")]IQueryable<ConversationInformation> conversationInformationList,
             TraceWriter log)
         {
+            var account = CloudStorageAccount.Parse("<Your Storage Connection String>");
+            client = account.CreateCloudTableClient();
+            CloudTable table = client.GetTableReference("ConversationInformation");
+            await table.CreateIfNotExistsAsync();
+            TableOperation getOperation = TableOperation.Retrieve<ConversationInformation>(partitionKey: "ConversationInformation", rowkey: "default-user");
+            var info = await table.ExecuteAsync(getOperation);
+            var conversationInformation = info.Result as ConversationInformation;
+            var conversationReference = JsonConvert.DeserializeObject<ConversationReference>(conversationInformation.ConversationReference);
+
             //TODO: Need to refactor.
             log.Info("C# HTTP trigger function processed a request.");
 
@@ -44,10 +52,10 @@ namespace HumanHandsoffApp
             //ConversationReference reference = JsonConvert.DeserializeObject<ConversationReference>(conversationInformation.ConversationReference);
 
             //Create Connector Client
-            //var appCredential = new MicrosoftAppCredentials("<Your MicrosoftAppId which you set in application.json in TravelBot v4>", "<Your MicrosoftAppPassword which you set in application.json in TravelBot v4>");
-            string MicrosoftAppId = configuration["MicrosoftAppId"];
-            string MicrosoftAppPassword = configuration["MicrosoftAppPassword"];
-            var appCredential = new MicrosoftAppCredentials(MicrosoftAppId, MicrosoftAppPassword);
+            var appCredential = new MicrosoftAppCredentials("<Your MicrosoftAppId which you set in application.json in TravelBot v4>", "<Your MicrosoftAppPassword which you set in application.json in TravelBot v4>");
+            //string MicrosoftAppId = configuration["MicrosoftAppId"];
+            //string MicrosoftAppPassword = configuration["MicrosoftAppPassword"];
+            //var appCredential = new MicrosoftAppCredentials(MicrosoftAppId, MicrosoftAppPassword);
             MicrosoftAppCredentials.TrustServiceUrl(reference.ServiceUrl);
             var connector = new ConnectorClient(new Uri(reference.ServiceUrl), appCredential);
 
