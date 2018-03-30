@@ -12,11 +12,14 @@ namespace TravelBotv4.Services
 {
     public class Feedbacker
     {
-                
+        /*
         private static string ModelId = "";
         private static string SubscriptionKey = "";
         private static string StreamUrl = "";
-        
+        */
+        private static string ModelId = "3a3abee2-3567-4f85-9fc6-2d17a3189a08";
+        private static string SubscriptionKey = "50110d00f75b486480efa8fd8b537552";
+        private static string StreamUrl = "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/3a3abee2-3567-4f85-9fc6-2d17a3189a08?subscription-key=50110d00f75b486480efa8fd8b537552&verbose=true&timezoneOffset=0&q=";
 
         public enum INTENT : UInt16
         {

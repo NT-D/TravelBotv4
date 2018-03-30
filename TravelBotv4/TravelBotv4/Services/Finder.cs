@@ -12,12 +12,14 @@ namespace TravelBotv4.Services
 {
     public class Finder 
     {
-        
+        /*
         private static string ModelId = "";
         private static string SubscriptionKey = "";
         private static string StreamUrl = "";
-        
-
+        */
+        private static string ModelId = "178e1700-34e6-401b-8d60-f831b0b449ad";
+        private static string SubscriptionKey = "50110d00f75b486480efa8fd8b537552";
+        private static string StreamUrl = "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/178e1700-34e6-401b-8d60-f831b0b449ad?subscription-key=50110d00f75b486480efa8fd8b537552&verbose=true&timezoneOffset=0&q=";
 
 
         private enum INTENT : UInt16 {
@@ -60,9 +62,7 @@ namespace TravelBotv4.Services
                         }
                         else
                         {
-                            if (0 < previous_request.offset) { 
-                                previous_request.offset -= 1;
-                            }
+                            previous_request.ModifyForPrev();
                             result = await searchSpotAsync(previous_request);
                         }
                         break;
@@ -76,7 +76,7 @@ namespace TravelBotv4.Services
                         }
                         else
                         {
-                            previous_request.offset += 1;
+                            previous_request.ModifyForNext();
                             result = await searchSpotAsync(previous_request);
                         }
                         break;
