@@ -14,7 +14,7 @@ namespace HumanHandoffApp.Services
         public static HttpClient httpClient = new HttpClient();
         public static IConfiguration Configuration;
         public static string url = Configuration["ChatPlusBaseUrl"] + "send";
-        public static async Task<bool> SendConnectionRequest()
+        public static async Task<bool> SendConnectionRequest(ConversationInformation conversationInformation)
         {
             // TODO hiroaki-honda Implement logic to send connection request
             return true;
