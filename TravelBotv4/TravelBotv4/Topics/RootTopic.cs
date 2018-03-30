@@ -68,7 +68,12 @@ namespace TravelBotv4.Topics
             var image = context.Get<ImageRecognizeResult>(ImageMiddleware.ImageRecognizerResultKey);
             if (image != null)
             {
-                var result = await searchWithImage(context, image);
+                await context.SendActivity("Thaks for sending me a photo!\nLet's see...");
+
+                var keyword = image.PrimaryKeyword();
+                var finder = new Finder();
+                var result = await finder.SearchWithKeywordAsync(keyword);
+
                 if (result != null)
                 {
                     SearcherFeedbackState = true;
@@ -119,6 +124,7 @@ namespace TravelBotv4.Topics
                     // Not reterun and continue next line when you get NOEN intent.
                 }
 
+
                 // QnA
                 var qnamaker = new QnaMaker();
                 var queryresults = await qnamaker.SearchQnaMaker(message.Text);
@@ -149,6 +155,7 @@ namespace TravelBotv4.Topics
                                 .OnReceiveActivity(context);
                         return;
                     }
+                
 
                 // Search
                 var finder = new Finder();
@@ -162,16 +169,6 @@ namespace TravelBotv4.Topics
                 }
                 await context.SendActivity("Sorry, but I didn't understand that. Could you try saying that another way?");
             }
-        }
-        public async Task<BaseSearchResult> searchWithImage(IBotContext context, ImageRecognizeResult image)
-        {
-            string keyword = null;
-            if (image.RecognizedServiceType == ImageServiceType.ComputerVisionService)
-            {
-                keyword = image.ComputerVisionResult.Result.Landmarks?[0].Name;
-            }
-            var finder = new Finder();
-            return await finder.SearchWithKeywordAsync(keyword);
         }
         private Activity createReply(IBotContext context, BaseSearchResult result)
         {
