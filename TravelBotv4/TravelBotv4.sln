@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TravelBotv4", "TravelBotv4\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotMessageRouting", "BotMessageRouting\BotMessageRouting.csproj", "{826B2832-3CD3-4B62-9F78-65225FF6EBC8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HumanHandsoffApp", "HumanHandsoffApp\HumanHandsoffApp.csproj", "{4C8A9AF1-0C24-4E2B-9313-E9E32B419305}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HumanHandoffApp", "HumanHandoffApp\HumanHandoffApp.csproj", "{C81C4807-4412-4622-A797-245E81054FF7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{826B2832-3CD3-4B62-9F78-65225FF6EBC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{826B2832-3CD3-4B62-9F78-65225FF6EBC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{826B2832-3CD3-4B62-9F78-65225FF6EBC8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4C8A9AF1-0C24-4E2B-9313-E9E32B419305}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4C8A9AF1-0C24-4E2B-9313-E9E32B419305}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4C8A9AF1-0C24-4E2B-9313-E9E32B419305}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4C8A9AF1-0C24-4E2B-9313-E9E32B419305}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C81C4807-4412-4622-A797-245E81054FF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C81C4807-4412-4622-A797-245E81054FF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C81C4807-4412-4622-A797-245E81054FF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C81C4807-4412-4622-A797-245E81054FF7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

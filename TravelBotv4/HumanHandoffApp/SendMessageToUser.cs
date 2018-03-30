@@ -1,6 +1,4 @@
 using System.IO;
-using System.Configuration;
-using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -9,15 +7,13 @@ using Microsoft.Azure.WebJobs.Host;
 using Newtonsoft.Json;
 using Microsoft.Bot.Schema;
 using System;
-using System.Collections;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Bot.Connector;
 using Microsoft.WindowsAzure.Storage.Table;
 using Microsoft.WindowsAzure.Storage;
-using HumanHandsoffApp.Models;
+using HumanHandoffApp.Models;
 
 namespace HumanHandsoffApp
 {
@@ -26,18 +22,17 @@ namespace HumanHandsoffApp
         public static CloudTableClient client;
         [FunctionName(nameof(SendMessageToUser))]
         public async static Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]HttpRequest req, 
-            [Table(tableName:"ConversationInformation", partitionKey: "ConversationInformation", Connection = "HumanHandsoffStorage")]IQueryable<ConversationInformation> conversationInformationList,
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]HttpRequest req,
             TraceWriter log)
         {
-            var account = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=handsoffbotframeworkv4;AccountKey=Jl/huNuFIySFrUlTkVur9OjoCcfdyrydu3M6DxwhCAfrJlRqmdlVVyQiGeOBEmUwxh0yzqtbIdgP+eN9Uai56w==;EndpointSuffix=core.windows.net");
+            var account = CloudStorageAccount.Parse("<Your Connection String>");
             client = account.CreateCloudTableClient();
             CloudTable table = client.GetTableReference("ConversationInformation");
             await table.CreateIfNotExistsAsync();
             TableOperation getOperation = TableOperation.Retrieve<ConversationInformation>(partitionKey: "ConversationInformation", rowkey: "default-user");
             var info = await table.ExecuteAsync(getOperation);
             var conversationInformation = info.Result as ConversationInformation;
-            var conversationReference = JsonConvert.DeserializeObject<ConversationReference>(conversationInformation.ConversationReference);
+            var reference = JsonConvert.DeserializeObject<ConversationReference>(conversationInformation.ConversationReference);
 
             //TODO: Need to refactor.
             log.Info("C# HTTP trigger function processed a request.");
@@ -48,7 +43,7 @@ namespace HumanHandsoffApp
             string name = webhookResponse.visitor.visitor_id;
 
             //Get conversation reference from input binding
-            ConversationReference reference = JsonConvert.DeserializeObject<ConversationReference>(conversationInformationList.OrderByDescending(r => r.Timestamp).First().ConversationReference);
+            //ConversationReference reference = JsonConvert.DeserializeObject<ConversationReference>(conversationInformationList.OrderByDescending(r => r.Timestamp).First().ConversationReference);
             //ConversationReference reference = JsonConvert.DeserializeObject<ConversationReference>(conversationInformation.ConversationReference);
 
             //Create Connector Client
