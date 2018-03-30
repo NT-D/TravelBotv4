@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using System;
+using System.Diagnostics;
 using Microsoft.Bot.Schema;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.BotFramework;
@@ -30,8 +31,11 @@ namespace TravelBotv4.Middlewares
             }
 
             // Handle the message from functions contains ChatPlus's webhook response
-            if (activity.Type == ActivityTypes.Event)
+            if (activity?.Type == ActivityTypes.Event)
             {
+                Debug.WriteLine("*************************");
+                Debug.WriteLine("Got event type message");
+                Debug.WriteLine("*************************");
                 string userId = "default-user"; // TODO hiroaki-honda remove this line and replace userId used as key to extract ConversationInformation from table storage. ("default-user" is the userId just for Hackfest).
                 // string userId = Deserialize<Visitor>("visitor", (Activity)activity).visitor_id;
                 ConversationReference conversationReference = await GetConversationReferenceByUserId(userId);
@@ -60,7 +64,7 @@ namespace TravelBotv4.Middlewares
                 CloudQueue queue = cloudQueueClient.GetQueueReference("message-from-user");
                 var item = new ConversationInformation()
                 {
-                    conversationReference = JsonConvert.SerializeObject(GetConversationReference((Activity)activity)),
+                    ConversationReference = JsonConvert.SerializeObject(GetConversationReference((Microsoft.Bot.Schema.Activity)activity)),
                     MessageFromUser = context.Request.Text
                 };
                 var message = new CloudQueueMessage(JsonConvert.SerializeObject(item));
@@ -69,7 +73,8 @@ namespace TravelBotv4.Middlewares
             }
 
             // Request to make a connection between user and agent
-            if (!string.IsNullOrEmpty(activity.Text)
+            if (activity != null &&
+                !string.IsNullOrEmpty(activity.Text)
                 && activity.Text.ToLower().Contains(Commands.CommandRequestConnection))
             {
                 // Store conversation reference (Use this info when send a proactive message to user after).
@@ -81,6 +86,8 @@ namespace TravelBotv4.Middlewares
                 // Set connecting state true
                 var state = context.GetUserState<BotUserState>();
                 state.IsConnectedToAgent = true;
+
+                await context.SendActivity("Now make a request for connection. Please wait a minutes.");
             }
             else
             {
@@ -95,7 +102,7 @@ namespace TravelBotv4.Middlewares
             {
                 PartitionKey = "ConversationInformation",
                 RowKey = conversationReference.User.Id,
-                conversationReference = JsonConvert.SerializeObject(conversationReference),
+                ConversationReference = JsonConvert.SerializeObject(conversationReference),
                 MessageFromUser = context.Request.Text
             };
             CloudStorageAccount account = buildStorageAccount();
@@ -106,7 +113,7 @@ namespace TravelBotv4.Middlewares
             await table.ExecuteAsync(upsertOperation);
         }
 
-        public static ConversationReference GetConversationReference(Activity activity)
+        public static ConversationReference GetConversationReference(Microsoft.Bot.Schema.Activity activity)
         {
             BotAssert.ActivityNotNull(activity);
 
@@ -126,15 +133,23 @@ namespace TravelBotv4.Middlewares
         private async Task SendProactiveMessage(IBotContext context, ConversationReference conversationReference, string messageFromAgent)
         {
             // TODO hiroaki-honda Implement logic to send proactive message to user
+            Debug.WriteLine("************************");
+            Debug.WriteLine("SendProactiveMessage!!!!");
+            Debug.WriteLine("************************");
             await context.Adapter.ContinueConversation(conversationReference, (IBotContext _context) => PassTheMessageToUserFromAgent(_context, messageFromAgent));
+            return;
         }
 
         public async Task PassTheMessageToUserFromAgent(IBotContext context, string message)
         {
+            Debug.WriteLine("************************");
+            Debug.WriteLine("PassTheMessageToUserFromAgent!!!!");
+            Debug.WriteLine("************************");
             await context.SendActivity(message);
+            return;
         }
 
-        private T Deserialize<T>(string name, Activity activity)
+        private T Deserialize<T>(string name, Microsoft.Bot.Schema.Activity activity)
         {
             return JsonConvert.DeserializeObject<T>(((JObject)activity.Value).GetValue(name).ToString());
         }
@@ -147,7 +162,7 @@ namespace TravelBotv4.Middlewares
             TableOperation getConversationInformation = TableOperation.Retrieve("ConversationInformation", userId);
             var res = await table.ExecuteAsync(getConversationInformation);
             var conversationInformation = (ConversationInformation)res.Result;
-            return JsonConvert.DeserializeObject<ConversationReference>(conversationInformation.conversationReference);
+            return JsonConvert.DeserializeObject<ConversationReference>(conversationInformation.ConversationReference);
         }
 
         private CloudStorageAccount buildStorageAccount()

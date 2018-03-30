@@ -11,7 +11,7 @@ namespace TravelBotv4.Models
 {
     public class ConversationInformation : TableEntity
     {
-        public string conversationReference { get; set; }
+        public string ConversationReference { get; set; }
         public string MessageFromUser { get; set; }
     }
 }
