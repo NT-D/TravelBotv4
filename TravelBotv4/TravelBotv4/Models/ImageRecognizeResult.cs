@@ -6,6 +6,21 @@
         public ComputerVisionResult ComputerVisionResult { get; set; }
         public CustomVisionResult CustomVisionResult { get; set; }
         public BingImageResult BingImageResult { get; set; }
+
+        public string PrimaryKeyword()
+        {
+            string keyword = null;
+            if (this.RecognizedServiceType == ImageServiceType.ComputerVisionService)
+            {
+                keyword = this.ComputerVisionResult.Result.Landmarks?[0].Name;
+            }
+            else if (this.RecognizedServiceType == ImageServiceType.ComputerVisionService)
+            {
+                keyword = this.ComputerVisionResult.Result.Landmarks?[0].Name;
+            }
+            return keyword;
+        }
+
     }
 
     public enum ImageServiceType

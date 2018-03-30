@@ -1,19 +1,20 @@
 ﻿using System;
-using System.Configuration;
 using System.Net.Http;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Functions.Models;
+using Microsoft.Extensions.Configuration;
+using HumanHandoffApp.Models;
 
-namespace Functions.Services
+namespace HumanHandoffApp.Services
 {
     public static class ChatPlus
     {
         public static HttpClient httpClient = new HttpClient();
-        public static string url = ConfigurationManager.AppSettings["ChatPlusBaseUrl"] + "send";
-        public static async Task<bool> SendConnectionRequest()
+        public static IConfiguration Configuration;
+        public static string url = Configuration["ChatPlusBaseUrl"] + "send";
+        public static async Task<bool> SendConnectionRequest(ConversationInformation conversationInformation)
         {
             // TODO hiroaki-honda Implement logic to send connection request
             return true;
@@ -33,7 +34,7 @@ namespace Functions.Services
                         text = conversationInformation.MessageFromUser
                     }
                 },
-                accessToken = ConfigurationManager.AppSettings["ChatPlusAccessToken"],
+                accessToken = Configuration["ChatPlusAccessToken"],
                 siteId = chatPlusInformation.site.site_id
             };
             var res = await httpClient.PostAsync<MessageToAgent>(url, payload, null);
