@@ -65,8 +65,13 @@ namespace TravelBotv4.Topics
                 }
 
                 // CHIT
-                // if() {
-                // }
+                var chitchater = new ChitChater();
+                var answer = await chitchater.SearchChitChat(message.Text);
+                if (answer != null)
+                {
+                    await context.SendActivity(answer);
+                    return;
+                }
 
                 // QnA
                 // if() {
