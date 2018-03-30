@@ -52,10 +52,10 @@ namespace HumanHandsoffApp
             //ConversationReference reference = JsonConvert.DeserializeObject<ConversationReference>(conversationInformation.ConversationReference);
 
             //Create Connector Client
-            //var appCredential = new MicrosoftAppCredentials("<Your MicrosoftAppId which you set in application.json in TravelBot v4>", "<Your MicrosoftAppPassword which you set in application.json in TravelBot v4>");
-            string MicrosoftAppId = configuration["MicrosoftAppId"];
-            string MicrosoftAppPassword = configuration["MicrosoftAppPassword"];
-            var appCredential = new MicrosoftAppCredentials(MicrosoftAppId, MicrosoftAppPassword);
+            var appCredential = new MicrosoftAppCredentials("<Your MicrosoftAppId which you set in application.json in TravelBot v4>", "<Your MicrosoftAppPassword which you set in application.json in TravelBot v4>");
+            //string MicrosoftAppId = configuration["MicrosoftAppId"];
+            //string MicrosoftAppPassword = configuration["MicrosoftAppPassword"];
+            //var appCredential = new MicrosoftAppCredentials(MicrosoftAppId, MicrosoftAppPassword);
             MicrosoftAppCredentials.TrustServiceUrl(reference.ServiceUrl);
             var connector = new ConnectorClient(new Uri(reference.ServiceUrl), appCredential);
 
